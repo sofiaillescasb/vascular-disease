@@ -21,7 +21,7 @@ diag(correlations.2) <- 0
 write.csv(correlations.2, "~/Vascular_Disease/correlations_2.csv")
 corr.graph <- igraph::graph_from_adjacency_matrix(as.matrix(correlations.2))
 components(corr.graph)
-createNetworkFromIgraph(corr.graph)
+#createNetworkFromIgraph(corr.graph)
 edge.list <- as_edgelist(corr.graph, names = TRUE)
 write.csv(edge.list, "~/Vascular_Disease/edges.csv")
 
@@ -82,13 +82,20 @@ fold.change <- function(p) {
 
 d <- as.data.frame(lapply(patients, fold.change))
 colnames(d) <- colnames(l2[-1])
-
-
-dif.lst <- list()
+dif.lst <- list(1:36)
 
 for (i in 1:length(colnames(d))) {
-  pat.lst <- subset(d[i], abs(d[i])>2)
-  dif.lst <- list(dif.lst,pat.lst)
+  dif.lst[i] <- list(subset(d[i], abs(d[i])>2))
 }
 
-dif.lst
+names(dif.lst) <- colnames(l2[-1])
+gene.names <- c()
+
+for (j in 1:length(dif.lst)) {
+  gene.names <- c(gene.names,list(rownames(dif.lst[[j]])))
+  
+}
+
+names(gene.names) <- colnames(l2[-1])
+capture.output(gene.names, file="~/Vascular_Disease/sel_genes_per_patient.txt")
+saveRDS(gene.names, file="~/Vascular_Disease/sel_genes_per_patient")
