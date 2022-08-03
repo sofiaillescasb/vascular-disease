@@ -21,7 +21,7 @@ diag(correlations.2) <- 0
 write.csv(correlations.2, "~/Vascular_Disease/correlations_2.csv")
 corr.graph <- igraph::graph_from_adjacency_matrix(as.matrix(correlations.2))
 components(corr.graph)
-#createNetworkFromIgraph(corr.graph)
+createNetworkFromIgraph(corr.graph)
 edge.list <- as_edgelist(corr.graph, names = TRUE)
 write.csv(edge.list, "~/Vascular_Disease/edges.csv")
 
@@ -85,7 +85,7 @@ colnames(d) <- colnames(l2[-1])
 dif.lst <- list(1:36)
 
 for (i in 1:length(colnames(d))) {
-  dif.lst[i] <- list(subset(d[i], abs(d[i])>2))
+  dif.lst[i] <- list(subset(d[i],abs(d[[i]])>sort(abs(d[[i]]),decreasing = TRUE)[300]))
 }
 
 names(dif.lst) <- colnames(l2[-1])
