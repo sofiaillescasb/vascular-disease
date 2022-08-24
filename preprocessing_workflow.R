@@ -23,7 +23,7 @@ counts <- read.csv("assay.csv", header=TRUE, row.names=1)
 list(counts)
 head(rownames(counts))
 #Importing sample metadata
-meta <- read.csv("MatrzMeta.csv")
+meta <- read.csv("se/MatrzMeta.csv", header=TRUE, row.names = 2)
 head(meta)
 
 #Creating SummarizedExperiment object

@@ -48,18 +48,6 @@ g.lst.eid <- lapply(g.lst, function(x) found_genes[x])
 
 ham_dist <- read.csv("communities/hamming_distance_multilayer_network.tsv", sep ='')
 
-#Dendrogram
-
-all_genes <- unique(unlist(g.lst.eid))
-all_genes2 <- c()
-for (k in 1:(length(all_genes))) {
-  all_genes2 <- c(all_genes2,which(rownames(ham_dist)==all_genes[k]))
-}
-
-sel <- ham_dist[all_genes2,all_genes2]
-hc <- hclust(as.dist(sel,"ward.D2"))
-
-
 ifun <- function(g) {
   inx <- c()
   for (k in 1:(length(g))) {
@@ -70,28 +58,54 @@ ifun <- function(g) {
 
 index.lst <- lapply(g.lst.eid, function(x) ifun(x))
 
-set.seed(2022) # Set the seeds to generate the same dendrogram
+#Making a list of the patients' dataframes
+df.lst <- lapply(index.lst, function(x) ham_dist[x,x])
+
+cfun <- function(d,n) {
+  df.filt <- apply(d, 1, function(x) which(x!=24))
+}
+
+df.filt.lst <- lapply(df.lst, cfun)
+df.filt.lst2 <- df.filt.lst
+
+#Removing genes that only form communities with themselves
+
+for (m in 1:length(df.filt.lst2)) {
+  len <- sapply(df.filt.lst[[m]], length)
+  df.filt.lst2[[m]] <- df.filt.lst[[m]][order(len)]
+  if (length(df.filt.lst2[[m]][[1]])==1) {
+    df.filt.lst2[[m]] <- df.filt.lst2[[m]][-(1)]
+  }
+}
+  
+post.mn.patients <- lapply(df.filt.lst2, function(x) names(x))
+post.mn.patients.matrix <- t(data.frame(lapply(post.mn.patients,function(x) as.integer(unique(unlist(post.mn.patients)) %in% x))))
+saveRDS(df.lst, file="~/Vascular_Disease/sel_hamming")
+saveRDS(post.mn.patients, file="~/Vascular_Disease/filt_genes_per_patient")
+
+
+set.seed(2022)
+res_shc2 <- shc(post.mn.patients.matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
+res_shc2$hc_dat$labels <- rownames(post.mn.patients.matrix)
+
+png(file="plots/hc/hc_post_multi.png", width =465, height = 225, units = "mm", res=300)
+
+plot(res_shc2,alpha=0.5,ci_emp=T,use_labs = TRUE)
+
+dev.off()
+
+#Dendrogram
+all_genes <- unique(unlist(g.lst.eid))
+all_genes2 <- c() #this vector will contain numbers to index the dataframe's columns
+for (k in 1:(length(all_genes))) {
+  all_genes2 <- c(all_genes2,which(rownames(ham_dist)==all_genes[k]))
+}
+
+sel <- ham_dist[all_genes2,all_genes2]
+hc <- hclust(as.dist(sel,"ward.D2"))
+
+set.seed(2022) # Set the seeds ,to generate the same dendrogram
 
 # Generate the dendrogram object
 dend3 <- as.dendrogram(hc)
  
-#For g:Profiler intput
-##For custom scope
-counts <- read.csv("counts/assay.csv", header=TRUE, row.names=1)
-
-dir.create("~/Vascular_Disease/counts")
-capture.output(cat(noquote(rownames(counts))), file="~/Vascular_Disease/gprofiler_input/all_genes_w_count.txt")
-
-dir.create("~/Vascular_Disease/gprofiler_output")
-for(i in 1:length(found_genes)) {
-  sink("gprofiler_output/genes.txt",append = TRUE)
-  cat(paste0('\n',">",names(found_genes[i]),'\n'))
-  cat(noquote(g.lst[[i]]))
-  sink()
-}
-
-
-
-# gprog <- gost(g.lst, multi_query = TRUE ,correction_method = "fdr", domain_scope = "custom", custom_bg = rownames(counts))
-# gostplot(gprog)
-
