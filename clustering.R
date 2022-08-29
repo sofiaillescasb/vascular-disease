@@ -12,6 +12,12 @@ g.lst <- readRDS("~/Vascular_Disease/sel_genes_per_patient")
 patient_matrix <- t(data.frame(lapply(g.lst,function(x) as.integer(unique(unlist(g.lst)) %in% x))))
 colnames(patient_matrix) <- unique(unlist(g.lst))
 
+res_shc$hc_dat$labels <- rownames(patient_matrix)
+
+png(file="plots/hc/hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
+
+plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
+
 
 vfun <- function(x, y) {1 - jaccard(x, y)}
 mfun <- function(x) {
@@ -21,12 +27,6 @@ mfun <- function(x) {
 
 set.seed(2022)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
-res_shc$hc_dat$labels <- rownames(patient_matrix)
-
-png(file="plots/hc/hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
-
-plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
-
 dev.off()
 
 #Mapping gene IDs

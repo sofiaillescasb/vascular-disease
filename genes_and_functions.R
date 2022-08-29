@@ -21,7 +21,7 @@ jaccard_ind <- function(x){
 }
 
 
-setwd('Medulloblastoma-main/')
+setwd('Vascular_Disease/Medulloblastoma-main/')
 # Load dependencies
 library(sigclust2)
 library(pvclust)
@@ -247,49 +247,66 @@ pathways_res <- lapply(genes_interesantes, function(x) gost(x,'hsapiens'))
 pathways_res <- lapply(pathways_res,function(x) x$result)
 
 
-g1 <- pathways_res[names(which(referencia == 1))]
-g1 <- do.call(rbind,g1)
-g1 <- names(which(table(g1$term_name)==table(referencia)['1']))
+# g1 <- pathways_res[names(which(referencia == 1))]
+# g1 <- do.call(rbind,g1)
+# g1 <- names(which(table(g1$term_name)==table(referencia)['1']))
 
 genes1 <- genes_interesantes[names(which(referencia == 1))]
 genes1 <- do.call(c,genes1)
 genes1 <- names(which(table(genes1) == max(table(genes1))))
 
-g2 <- pathways_res[names(which(referencia == 2))]
-g2 <- do.call(rbind,g2)
-g2 <- names(which(table(g2$term_name)==table(referencia)['2']))
+# g2 <- pathways_res[names(which(referencia == 2))]
+# g2 <- do.call(rbind,g2)
+# g2 <- names(which(table(g2$term_name)==table(referencia)['2']))
 
 genes2 <- genes_interesantes[names(which(referencia == 2))]
 genes2 <- do.call(c,genes2)
 genes2 <- names(which(table(genes2) == max(table(genes2))))
 
-g3 <- pathways_res[names(which(referencia == 3))]
-g3 <- do.call(rbind,g3)
-g3 <- names(which(table(g3$term_name)==table(referencia)['3']))
+# g3 <- pathways_res[names(which(referencia == 3))]
+# g3 <- do.call(rbind,g3)
+# g3 <- names(which(table(g3$term_name)==table(referencia)['3']))
 
 genes3 <- genes_interesantes[names(which(referencia == 3))]
 genes3 <- do.call(c,genes3)
 genes3 <- names(which(table(genes3) == max(table(genes3))))
 
-g4 <- pathways_res[names(which(referencia == 4))]
-g4 <- do.call(rbind,g4)
-g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
+# g4 <- pathways_res[names(which(referencia == 4))]
+# g4 <- do.call(rbind,g4)
+# g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
 
 genes4 <- genes_interesantes[names(which(referencia == 4))]
 genes4 <- do.call(c,genes4)
 genes4 <- names(which(table(genes4) == max(table(genes4))))
 
-lst1 <- list(setdiff(g1,c(g2,g3)), genes1)
-lst2 <- list(setdiff(g2,c(g1,g3)), genes2)
-lst3 <- list(setdiff(g3,c(g1,g2)), genes3)
-lst4 <- list(setdiff(g4,c(g1,g2,g3)), genes4)
+lst_all <- list(genes1,genes2,genes3,genes4)
 
-lst <- append(lst1,lst2)
-lst <- append(lst,lst3)
-lst <- append(lst,lst4)
+#genes1 doesn't have unique genes 
+dgenes1 <- setdiff(genes1,c(genes2,genes3,genes4))
+dgenes2 <- setdiff(genes2,c(genes1,genes3,genes4))
+dgenes3 <- setdiff(genes3,c(genes1,genes2,genes4))
+dgenes4 <- setdiff(genes4,c(genes1,genes2, genes3))
 
-names(lst) <- c("Group 1 functions", "Group 1 genes", "Group 2 functions", "Group 2 genes", "Group 3 functions", "Group 3 genes", "Group 4 functions", "Group 4 genes")
+cat(dgenes2, sep=',')
+cat(dgenes3, sep=',')
+cat(dgenes4, sep=',')
+
+lst_each <- list(genes1,dgenes2,dgenes3,dgenes4)
+names(lst_all) <- c("Group 1", "Group 2", "Group 3", "Group 4")
 
 dir.create("~/Vascular_Disease/genes")
 capture.output(lst, file="~/Vascular_Disease/genes/genes_and_function.txt")
 
+#Venn diagram
+
+library(ggVennDiagram)
+library(ggplot2)
+
+ggVennDiagram(lst_all) + scale_fill_gradient(high="#f2709c",low="#ff9472")
+
+library(ggvenn)
+ggvenn(
+  lst_all, columns=names(lst_all),
+  fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
+  stroke_size = 0.5, set_name_size = 4, show_percentage = FALSE
+)
