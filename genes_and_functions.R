@@ -247,39 +247,57 @@ pathways_res <- lapply(genes_interesantes, function(x) gost(x,'hsapiens'))
 pathways_res <- lapply(pathways_res,function(x) x$result)
 
 
-# g1 <- pathways_res[names(which(referencia == 1))]
-# g1 <- do.call(rbind,g1)
-# g1 <- names(which(table(g1$term_name)==table(referencia)['1']))
+g1 <- pathways_res[names(which(referencia == 1))]
+g1 <- do.call(rbind,g1)
+g1 <- names(which(table(g1$term_name)==table(referencia)['1'])) #Ensuring the terms are present in every patient of the group
+
+g1i <- pathways_res[names(which(referencia == 1))]
+g1i <- do.call(rbind,g1i)
+g1i <- names(which(table(g1i$term_id)==table(referencia)['1']))
 
 genes1 <- genes_interesantes[names(which(referencia == 1))]
 genes1 <- do.call(c,genes1)
 genes1 <- names(which(table(genes1) == max(table(genes1))))
 
-# g2 <- pathways_res[names(which(referencia == 2))]
-# g2 <- do.call(rbind,g2)
-# g2 <- names(which(table(g2$term_name)==table(referencia)['2']))
+g2 <- pathways_res[names(which(referencia == 2))]
+g2 <- do.call(rbind,g2)
+g2 <- names(which(table(g2$term_name)==table(referencia)['2']))
+
+g2i <- pathways_res[names(which(referencia == 2))]
+g2i <- do.call(rbind,g2i)
+g2i <- names(which(table(g2i$term_id)==table(referencia)['2']))
 
 genes2 <- genes_interesantes[names(which(referencia == 2))]
 genes2 <- do.call(c,genes2)
 genes2 <- names(which(table(genes2) == max(table(genes2))))
 
-# g3 <- pathways_res[names(which(referencia == 3))]
-# g3 <- do.call(rbind,g3)
-# g3 <- names(which(table(g3$term_name)==table(referencia)['3']))
+g3 <- pathways_res[names(which(referencia == 3))]
+g3 <- do.call(rbind,g3)
+g3 <- names(which(table(g3$term_name)==table(referencia)['3']))
+
+g3i <- pathways_res[names(which(referencia == 3))]
+g3i <- do.call(rbind,g3i)
+g3i <- names(which(table(g3i$term_id)==table(referencia)['3']))
 
 genes3 <- genes_interesantes[names(which(referencia == 3))]
 genes3 <- do.call(c,genes3)
 genes3 <- names(which(table(genes3) == max(table(genes3))))
 
-# g4 <- pathways_res[names(which(referencia == 4))]
-# g4 <- do.call(rbind,g4)
-# g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
+g4 <- pathways_res[names(which(referencia == 4))]
+g4 <- do.call(rbind,g4)
+g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
+
+g4i <- pathways_res[names(which(referencia == 4))]
+g4i <- do.call(rbind,g4i)
+g4i <- names(which(table(g4i$term_id)==table(referencia)['4']))
 
 genes4 <- genes_interesantes[names(which(referencia == 4))]
 genes4 <- do.call(c,genes4)
 genes4 <- names(which(table(genes4) == max(table(genes4))))
 
 lst_all <- list(genes1,genes2,genes3,genes4)
+names(lst_all) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+saveRDS(lst_all, file="../lst_all")
 
 #genes1 doesn't have unique genes 
 dgenes1 <- setdiff(genes1,c(genes2,genes3,genes4))
@@ -292,10 +310,19 @@ cat(dgenes3, sep=',')
 cat(dgenes4, sep=',')
 
 lst_each <- list(genes1,dgenes2,dgenes3,dgenes4)
-names(lst_all) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+names(lst_each) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+saveRDS(lst_all, file="../lst_each")
 
+lst_fun <- list(g1,g2,g3,g4)
+names(lst_fun) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+lst_id <- list(g1i,g2i,g3i,g4i)
+names(lst_id) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+
+saveRDS(lst_fun,"~/Vascular_Disease/genes/function")
+saveRDS(lst_id,"~/Vascular_Disease/genes/id")
 dir.create("~/Vascular_Disease/genes")
-capture.output(lst, file="~/Vascular_Disease/genes/genes_and_function.txt")
+capture.output(lst_fun, file="~/Vascular_Disease/genes/function.txt")
+capture.output(lst_id, file="~/Vascular_Disease/genes/id.txt")
 
 #Venn diagram
 
@@ -310,3 +337,16 @@ ggvenn(
   fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
   stroke_size = 0.5, set_name_size = 4, show_percentage = FALSE
 )
+
+lst_each_2 <- lapply(lst_each,function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'SYMBOL',column = 'ENTREZID')))
+ham_f <- lapply(lst_each_2, function(x) hamming_com[x,x])
+rownames(ham_f$`Group 1`) <- lapply(rownames(ham_f$`Group 1`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+rownames(ham_f$`Group 2`) <- lapply(rownames(ham_f$`Group 2`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+rownames(ham_f$`Group 3`) <- lapply(rownames(ham_f$`Group 3`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+rownames(ham_f$`Group 4`) <- lapply(rownames(ham_f$`Group 4`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+
+colnames(ham_f$`Group 1`) <- lapply(colnames(ham_f$`Group 1`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+colnames(ham_f$`Group 2`) <- lapply(colnames(ham_f$`Group 2`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+colnames(ham_f$`Group 3`) <- lapply(colnames(ham_f$`Group 3`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+colnames(ham_f$`Group 4`) <- lapply(colnames(ham_f$`Group 4`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
+
