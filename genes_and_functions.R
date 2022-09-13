@@ -34,23 +34,21 @@ library(data.table)
 library(ggplot2)
 library(ggrepel)
 library(data.table)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(ggvenn)
 
-sel.ham <- readRDS("~/Vascular_Disease/sel_hamming")
-hamming_com <- read.table("../communities/hamming_distance_multilayer_network.tsv",sep='\t')
+
+sel.ham <- readRDS("~/Vascular_Disease/sel_hamming") #table generated in clustering.R 
+hamming_com <- read.table("../communities/hamming_distance_multilayer_network.tsv",sep='\t') #hamming distance matrix obtained from repository, script for generation at ~/Vascular_Disease/generate_multilayer.R
 colnames(hamming_com) <- rownames(hamming_com)
-# # Create a vector with the paths where Molti's Output files are saved. 
-# structures_12 <- paste0("data/Molti_Output/",seq(0.5,12,0.5),".csv")
-# # Detect community trajectories and tree distances between each gene. 
-# curie_to_12_full <- CmmD_from_community_structures(nodelist = NULL, community_structures = structures_12, resolution_start = 0.5,resolution_end = 12,interval = 0.5,distmethod = "hamming",threads = 7)
-# curie_to_12_full$hamming_distance_matrix = as.matrix(curie_to_12_full$distance_matrix) * 24 # This transformation is needed because parallel dist is weighted.
-# # 24 = length(seq(0.5,12,0.5)) -> number of resolution values analyzed
-
 
 # Load genes associated to each patient from factor selection
 tata <- lapply(sel.ham, function(x) rownames(x))
 splited_patients <- tata
 
 all_genes_possible <- unique(unlist(splited_patients,use.names=F))
+all_genes_symbol <- mapIds(x = org.Hs.eg.db,keys = c(all_genes_possible), keytype = 'ENTREZID',column = 'SYMBOL')
 
 # Generate a 0-1 patient x genes matrix that acts as input for pamk, jaccard_ind and hclust.
 n_genes_p_patients <- matrix(data= 0, nrow= length(splited_patients),ncol= length(all_genes_possible))
@@ -73,6 +71,7 @@ mfun <- function(x) {
 set.seed(2022)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
 res_shc$hc_dat$labels <- rownames(patient_matrix)
+plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
 
 referencia <- sigclust2::shcutree(res_shc,alpha = .08)
 names(referencia) <- res_shc$hc_dat$labels
@@ -98,11 +97,10 @@ for(k in 0:10){
   for(i in 1:length(splited_patients)){
     genes_interesantes <- names(which(table(splited_patients[[i]])>=1))
     
-    # Filter CURIE genes to those included in the multilayer network.
+    # Filter genes to those included in the multilayer network.
     genes_interesantes <- genes_interesantes[genes_interesantes %in% rownames(hamming_com)]
     matricin <- hamming_com[genes_interesantes,genes_interesantes]
     
-    #sel.ham.m <- as.matrix(t(sel.ham))
     
     # For each value of theta between 0 and 10, we create a vector (suc), where for each gene of the multilayer we calculate the
     # number of other multilayer genes that are below a maximum k value of theta -distance in the tree-.
@@ -124,7 +122,7 @@ for(k in 0:10){
 
 message("Tetha based filtering finished. Calculating clustering accuracies for tetha 0 to 10 and lambda 1 to 20")
 
-# Start a 11 x 20 matrix to be filled with the hierarchical clustering accuracy values.
+# Start a 11 x 30 matrix to be filled with the hierarchical clustering accuracy values.
 final_accuracy_matrix <- matrix(0, ncol= 30, nrow= 11)
 final_matthews_matrix <- matrix(0, ncol= 30, nrow= 11)
 final_kk_used <- matrix(0, ncol= 30, nrow= 11)
@@ -150,7 +148,7 @@ val <- 28  #lambda
       n_genes_p_patients[rowi,] <- as.integer(colnames(n_genes_p_patients) %in% genes_per_patient_names[[rowi]])
     }
     
-    #WHATEVER <- c("MB10","MB21","MB33")
+    
     patient_matrix <- n_genes_p_patients
     
     patient_matrix2 <- patient_matrix # Exclude patients with missing data from clustering
@@ -167,6 +165,9 @@ val <- 28  #lambda
     patient_matrix3 <- t(patient_matrix2)
     set.seed(2020)
     res_hclust <- hclust(jaccard_ind(patient_matrix3),"ward.D2")
+    res_shc_2 <- shc(t(patient_matrix3), matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
+    res_shc_2$hc_dat$labels <- rownames(t(patient_matrix3))
+    plot(res_shc_2,alpha=0.5,ci_emp=T,use_labs = TRUE)
     
     # Calculate two 0-1 matrices in order to compare our clustering with the ground truth.
     arbol <- cutree(res_hclust,kk)
@@ -238,8 +239,6 @@ val <- 28  #lambda
 
     
 genes_interesantes <- lapply(genes_per_patient,names)
-library(AnnotationDbi)
-library(org.Hs.eg.db)
 genes_interesantes <- lapply(genes_interesantes,function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
 
 library(gprofiler2)
@@ -253,7 +252,7 @@ g1 <- names(which(table(g1$term_name)==table(referencia)['1'])) #Ensuring the te
 
 g1i <- pathways_res[names(which(referencia == 1))]
 g1i <- do.call(rbind,g1i)
-g1i <- names(which(table(g1i$term_id)==table(referencia)['1']))
+g1i <- names(which(table(g1i$term_id)==max(table(referencia)['1'])))
 
 genes1 <- genes_interesantes[names(which(referencia == 1))]
 genes1 <- do.call(c,genes1)
@@ -261,11 +260,11 @@ genes1 <- names(which(table(genes1) == max(table(genes1))))
 
 g2 <- pathways_res[names(which(referencia == 2))]
 g2 <- do.call(rbind,g2)
-g2 <- names(which(table(g2$term_name)==table(referencia)['2']))
+g2 <- names(which(table(g2$term_name)==max(table(referencia)['2'])))
 
 g2i <- pathways_res[names(which(referencia == 2))]
 g2i <- do.call(rbind,g2i)
-g2i <- names(which(table(g2i$term_id)==table(referencia)['2']))
+g2i <- names(which(table(g2i$term_id)==max(table(referencia)['2'])))
 
 genes2 <- genes_interesantes[names(which(referencia == 2))]
 genes2 <- do.call(c,genes2)
@@ -277,7 +276,7 @@ g3 <- names(which(table(g3$term_name)==table(referencia)['3']))
 
 g3i <- pathways_res[names(which(referencia == 3))]
 g3i <- do.call(rbind,g3i)
-g3i <- names(which(table(g3i$term_id)==table(referencia)['3']))
+g3i <- names(which(table(g3i$term_id)==max(table(referencia)['3'])))
 
 genes3 <- genes_interesantes[names(which(referencia == 3))]
 genes3 <- do.call(c,genes3)
@@ -289,7 +288,7 @@ g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
 
 g4i <- pathways_res[names(which(referencia == 4))]
 g4i <- do.call(rbind,g4i)
-g4i <- names(which(table(g4i$term_id)==table(referencia)['4']))
+g4i <- names(which(table(g4i$term_id)==max(table(referencia)['4'])))
 
 genes4 <- genes_interesantes[names(which(referencia == 4))]
 genes4 <- do.call(c,genes4)
@@ -309,6 +308,8 @@ cat(dgenes2, sep=',')
 cat(dgenes3, sep=',')
 cat(dgenes4, sep=',')
 
+g1
+
 lst_each <- list(genes1,dgenes2,dgenes3,dgenes4)
 names(lst_each) <- c("Group 1", "Group 2", "Group 3", "Group 4")
 saveRDS(lst_all, file="../lst_each")
@@ -324,14 +325,17 @@ dir.create("~/Vascular_Disease/genes")
 capture.output(lst_fun, file="~/Vascular_Disease/genes/function.txt")
 capture.output(lst_id, file="~/Vascular_Disease/genes/id.txt")
 
+capture.output(cat(f[[1]], sep='\n'), file="~/Vascular_Disease/genes/function_1.txt")
+capture.output(cat(f[[2]], sep='\n'), file="~/Vascular_Disease/genes/function_2.txt")
+capture.output(cat(f[[3]], sep='\n'), file="~/Vascular_Disease/genes/function_3.txt")
+capture.output(cat(f[[4]], sep='\n'), file="~/Vascular_Disease/genes/function_4.txt")
+
+cat(setdiff(g1i, c(g2i,g3i)), sep="\n")
+cat(setdiff(g2i,c(g3i,g1i)), sep="\n")
+cat(setdiff(g3i,c(g1i,g2i)), sep="\n")
+cat(setdiff(g4i,c(g1i,g3i,g2i)), sep="\n")
 #Venn diagram
 
-library(ggVennDiagram)
-library(ggplot2)
-
-ggVennDiagram(lst_all) + scale_fill_gradient(high="#f2709c",low="#ff9472")
-
-library(ggvenn)
 ggvenn(
   lst_all, columns=names(lst_all),
   fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
@@ -349,4 +353,3 @@ colnames(ham_f$`Group 1`) <- lapply(colnames(ham_f$`Group 1`),function(x) unname
 colnames(ham_f$`Group 2`) <- lapply(colnames(ham_f$`Group 2`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
 colnames(ham_f$`Group 3`) <- lapply(colnames(ham_f$`Group 3`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
 colnames(ham_f$`Group 4`) <- lapply(colnames(ham_f$`Group 4`),function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
-

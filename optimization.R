@@ -150,7 +150,6 @@ for(u in 1:11){ # 1 to 11 because of non 0-based language: If we want, for examp
       n_genes_p_patients[rowi,] <- as.integer(colnames(n_genes_p_patients) %in% genes_per_patient_names[[rowi]])
     }
     
-    #WHATEVER <- c("MB10","MB21","MB33")
     patient_matrix <- n_genes_p_patients
     
     patient_matrix2 <- patient_matrix # Exclude patients with missing data from clustering

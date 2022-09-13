@@ -15,11 +15,12 @@ library(pvclust) # Hierarchical clustering with p-values
 library(dendextend) # fancy plotting dendograms
 library(caret)
 library(psych)
+library(sigclust2)
 
 setwd("~/Vascular_Disease")
 
 #Importing counts data
-counts <- read.csv("assay.csv", header=TRUE, row.names=1)
+counts <- read.csv("counts/assay.csv", header=TRUE, row.names=1)
 list(counts)
 head(rownames(counts))
 #Importing sample metadata
@@ -258,6 +259,9 @@ plot_hierarchichal_clustering <- function(data,info, save_clusters=FALSE, key_wo
   
   return(clusters)
 }
+
+shc1 <- shc(as.matrix(as.data.frame(t(assays(se.filt)$logCPM.norm))), linkage="ward.D2", n_sim = 100)
+plot(shc1,alpha=0.5,ci_emp=T,use_labs = TRUE)
 
 logCPM <- cpm(dge.filt.norm, log=TRUE, prior.count=3)
 #normalized_clusters <- plot_hierarchical_clustering(logCPM,'based on normalized counts', n_boot=1000)

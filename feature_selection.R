@@ -5,7 +5,7 @@ library(igraph)
 
 setwd("~/Vascular_Disease")
 
-correlations <- read.csv("correlation_matrix.csv", header=TRUE, row.names=1)
+correlations <- read.csv("correlation/correlation_matrix.csv", header=TRUE, row.names=1)
 correlations.2 <- correlations
 correlated.genes <- correlations
 
@@ -18,7 +18,7 @@ correlations.2 <- as.matrix(correlations.2)
 #Removing self correlations
 diag(correlations.2) <- 0
 
-write.csv(correlations.2, "~/Vascular_Disease/correlations_2.csv")
+write.csv(correlations.2, "~/Vascular_Disease/correlation/correlations_2.csv")
 corr.graph <- igraph::graph_from_adjacency_matrix(as.matrix(correlations.2))
 components(corr.graph)
 createNetworkFromIgraph(corr.graph)
@@ -29,10 +29,10 @@ write.csv(edge.list, "~/Vascular_Disease/edges.csv")
 highCorr <- findCorrelation(correlations, cutoff = .9, names = FALSE)
 adj_matr <- correlations[, -highCorr]
 filtered <- correlations[, highCorr]
-write.csv(adj_matr, "~/Vascular_Disease/adjacency_matrix.csv")
-write.csv(filtered, "~/Vascular_Disease/reduced_genes.csv")
+write.csv(adj_matr, "~/Vascular_Disease/correlation/adjacency_matrix.csv")
+write.csv(filtered, "~/Vascular_Disease/correlation/reduced_genes.csv")
 correlated.genes[abs(correlated.genes) < 0.9 | correlated.genes == 1] <- "NA"
-write.csv(correlated.genes, "~/Vascular_Disease/correlated_genes.csv")
+write.csv(correlated.genes, "~/Vascular_Disease/correlation/correlated_genes.csv")
 
 colnames(adj_matr)
 colnames(filtered)
@@ -42,6 +42,8 @@ colnames(filtered)
 
 corr.bet <- estimate_betweenness(corr.graph, directed = FALSE, cutoff = -1)
 comps <- split(names(V(corr.graph)), components(corr.graph)$membership)
+
+write.csv(corr.bet, "~/Vascular_Disease/correlation/bet.csv")
 
 corr.comp <- components(corr.graph)
 corr.tab <- table(corr.comp$membership)
@@ -66,7 +68,7 @@ for (g in corr.groups){
 
 gene.lst <- c(gene.lst,n.sel)
 gene.lst <- unlist(gsub("\\.","-",gene.lst), use.names = FALSE)
-gene.counts <- read.csv("counts_sel_overmean.csv", header=TRUE, row.names=1) + 1
+gene.counts <- read.csv("counts/counts_sel_overmean.csv", header=TRUE, row.names=1) + 1
 gene.lst.count <- gene.counts[gene.lst,]
 rownames(gene.lst.count) <- gene.lst
 l2 <- lapply(gene.lst.count,log2)
