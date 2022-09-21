@@ -35,16 +35,10 @@ library(ggplot2)
 library(ggrepel)
 library(data.table)
 
+
 sel.ham <- readRDS("~/Vascular_Disease/sel_hamming")
 hamming_com <- read.table("../communities/hamming_distance_multilayer_network.tsv",sep='\t')
 colnames(hamming_com) <- rownames(hamming_com)
-# # Create a vector with the paths where Molti's Output files are saved. 
-# structures_12 <- paste0("data/Molti_Output/",seq(0.5,12,0.5),".csv")
-# # Detect community trajectories and tree distances between each gene. 
-# curie_to_12_full <- CmmD_from_community_structures(nodelist = NULL, community_structures = structures_12, resolution_start = 0.5,resolution_end = 12,interval = 0.5,distmethod = "hamming",threads = 7)
-# curie_to_12_full$hamming_distance_matrix = as.matrix(curie_to_12_full$distance_matrix) * 24 # This transformation is needed because parallel dist is weighted.
-# # 24 = length(seq(0.5,12,0.5)) -> number of resolution values analyzed
-
 
 # Load genes associated to each patient from factor selection
 tata <- lapply(sel.ham, function(x) rownames(x))
@@ -80,17 +74,6 @@ names(referencia) <- res_shc$hc_dat$labels
 ground_truth <- data.frame(referencia)
 ground_truth <- cbind(ground_truth,ground_truth[,1])
 ground_truth[,1] <- rownames(ground_truth)
-# Generate ground truth table from patient metadata
-# meta <- read.csv("../se/MatrzMeta.csv", header=TRUE, row.names = 2)
-# ground_truth_venous <- rownames(meta[meta$Summary.clinic=="venous malformation",])
-# ground_truth_lymphatic <- rownames(meta[meta$Summary.clinic=="lymphatic malformation",])
-# ground_truth <- matrix(nrow= length(c(ground_truth_venous,ground_truth_lymphatic)),ncol=2)
-# ground_truth[,1] <- c(ground_truth_venous,ground_truth_lymphatic)
-# ground_truth[,2] <- c(rep("venous malformation",length(ground_truth_venous)),rep("lymphatic malformation",length(ground_truth_lymphatic)))
-# colnames(ground_truth) <- c("Patient","Real_class")
-# rownames(ground_truth) <- ground_truth[,1]
-
-message("Performing filtering based on tetha (0 to 10)")
 
 genes_per_patient_list <- list()
 for(k in 0:10){
@@ -121,8 +104,6 @@ for(k in 0:10){
   names(genes_per_patient_list)[[k+1]] <- as.character(k)
   message(paste0("theta= ",k))
 }
-
-message("Tetha based filtering finished. Calculating clustering accuracies for tetha 0 to 10 and lambda 1 to 20")
 
 # Start a 11 x 20 matrix to be filled with the hierarchical clustering accuracy values.
 final_accuracy_matrix <- matrix(0, ncol= 30, nrow= 11)

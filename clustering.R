@@ -12,13 +12,6 @@ g.lst <- readRDS("~/Vascular_Disease/sel_genes_per_patient")
 patient_matrix <- t(data.frame(lapply(g.lst,function(x) as.integer(unique(unlist(g.lst)) %in% x))))
 colnames(patient_matrix) <- unique(unlist(g.lst))
 
-res_shc$hc_dat$labels <- rownames(patient_matrix)
-
-png(file="plots/hc/hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
-
-plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
-
-
 vfun <- function(x, y) {1 - jaccard(x, y)}
 mfun <- function(x) {
   as.dist(outer(split(x, f = row(x)), split(x, f = row(x)),
@@ -27,6 +20,9 @@ mfun <- function(x) {
 
 set.seed(2022)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
+res_shc$hc_dat$labels <- rownames(patient_matrix)
+png(file="plots/hc/hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
+plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
 dev.off()
 
 #Mapping gene IDs
@@ -94,18 +90,4 @@ plot(res_shc2,alpha=0.5,ci_emp=T,use_labs = TRUE)
 
 dev.off()
 
-#Dendrogram
-all_genes <- unique(unlist(g.lst.eid))
-all_genes2 <- c() #this vector will contain numbers to index the dataframe's columns
-for (k in 1:(length(all_genes))) {
-  all_genes2 <- c(all_genes2,which(rownames(ham_dist)==all_genes[k]))
-}
 
-sel <- ham_dist[all_genes2,all_genes2]
-hc <- hclust(as.dist(sel,"ward.D2"))
-
-set.seed(2022) # Set the seeds ,to generate the same dendrogram
-
-# Generate the dendrogram object
-dend3 <- as.dendrogram(hc)
- 

@@ -86,7 +86,7 @@ abline(v=1, col="red", lwd=2)
 
 
 # Filtering lowly expressed genes
-nsamples <- length(se$Sample.ID)
+nsamples <- length(se$Process.ID)
 sample_cutoff <- 0.2
 nsamples_cutoff <- sample_cutoff*nsamples
 nsamples_cutoff
@@ -260,9 +260,6 @@ plot_hierarchichal_clustering <- function(data,info, save_clusters=FALSE, key_wo
   return(clusters)
 }
 
-shc1 <- shc(as.matrix(as.data.frame(t(assays(se.filt)$logCPM.norm))), linkage="ward.D2", n_sim = 100)
-plot(shc1,alpha=0.5,ci_emp=T,use_labs = TRUE)
-
 logCPM <- cpm(dge.filt.norm, log=TRUE, prior.count=3)
 #normalized_clusters <- plot_hierarchical_clustering(logCPM,'based on normalized counts', n_boot=1000)
 
@@ -300,7 +297,7 @@ normalized_clusters <- plot_hierarchichal_clustering(logCPM_sel,'based on normal
 counts.sel <- as.data.frame(dge.sel$counts)
 row.names(counts.sel) <- rownames(dge.sel$
                                     counts)
-write.csv(counts.sel, "~/Vascular_Disease/counts_sel_overmean.csv")
+write.csv(counts.sel, "~/Vascular_Disease/counts_sel.csv")
 
 ##Finding correlated genes, creating correlation matrix
 

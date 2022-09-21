@@ -68,10 +68,10 @@ mfun <- function(x) {
                 Vectorize(vfun)))
 }
 
-set.seed(2022)
+set.seed(2020)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
 res_shc$hc_dat$labels <- rownames(patient_matrix)
-plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
+plot(res_shc,alpha=0.8,ci_emp=T,use_labs = TRUE)
 
 referencia <- sigclust2::shcutree(res_shc,alpha = .08)
 names(referencia) <- res_shc$hc_dat$labels
@@ -79,17 +79,7 @@ names(referencia) <- res_shc$hc_dat$labels
 ground_truth <- data.frame(referencia)
 ground_truth <- cbind(ground_truth,ground_truth[,1])
 ground_truth[,1] <- rownames(ground_truth)
-# Generate ground truth table from patient metadata
-# meta <- read.csv("../se/MatrzMeta.csv", header=TRUE, row.names = 2)
-# ground_truth_venous <- rownames(meta[meta$Summary.clinic=="venous malformation",])
-# ground_truth_lymphatic <- rownames(meta[meta$Summary.clinic=="lymphatic malformation",])
-# ground_truth <- matrix(nrow= length(c(ground_truth_venous,ground_truth_lymphatic)),ncol=2)
-# ground_truth[,1] <- c(ground_truth_venous,ground_truth_lymphatic)
-# ground_truth[,2] <- c(rep("venous malformation",length(ground_truth_venous)),rep("lymphatic malformation",length(ground_truth_lymphatic)))
-# colnames(ground_truth) <- c("Patient","Real_class")
-# rownames(ground_truth) <- ground_truth[,1]
 
-message("Performing filtering based on tetha (0 to 10)")
 
 genes_per_patient_list <- list()
 for(k in 0:10){
@@ -130,8 +120,8 @@ mean_per_pair <- matrix(0, ncol= 30, nrow= 11)
 rownames(final_accuracy_matrix) <- as.character(0:10)
 rownames(final_kk_used) <- as.character(0:10)
 
-u <- 5 # 1 to 11 because of non 0-based language: If we want, for example, theta to be 0, we set u=1
-val <- 28  #lambda
+u <- 5 
+val <- 2  #lambda
     preserve_genes_per_patient <- genes_per_patient_list[[u]] # u==k == tetha + 1
     genes_per_patient <- preserve_genes_per_patient
     genes_per_patient <- lapply(genes_per_patient,function(x) x[x<=val]) #val = lambda. We filter the genes that are over the lambda value tested
@@ -167,7 +157,7 @@ val <- 28  #lambda
     res_hclust <- hclust(jaccard_ind(patient_matrix3),"ward.D2")
     res_shc_2 <- shc(t(patient_matrix3), matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
     res_shc_2$hc_dat$labels <- rownames(t(patient_matrix3))
-    plot(res_shc_2,alpha=0.5,ci_emp=T,use_labs = TRUE)
+    plot(res_shc_2,alpha=0.8,ci_emp=T,use_labs = TRUE)
     
     # Calculate two 0-1 matrices in order to compare our clustering with the ground truth.
     arbol <- cutree(res_hclust,kk)
@@ -282,58 +272,24 @@ genes3 <- genes_interesantes[names(which(referencia == 3))]
 genes3 <- do.call(c,genes3)
 genes3 <- names(which(table(genes3) == max(table(genes3))))
 
-g4 <- pathways_res[names(which(referencia == 4))]
-g4 <- do.call(rbind,g4)
-g4 <- names(which(table(g4$term_name)==table(referencia)['4']))
-
-g4i <- pathways_res[names(which(referencia == 4))]
-g4i <- do.call(rbind,g4i)
-g4i <- names(which(table(g4i$term_id)==max(table(referencia)['4'])))
-
-genes4 <- genes_interesantes[names(which(referencia == 4))]
-genes4 <- do.call(c,genes4)
-genes4 <- names(which(table(genes4) == max(table(genes4))))
 
 lst_all <- list(genes1,genes2,genes3,genes4)
-names(lst_all) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+names(lst_all) <- c("Group 1", "Group 2", "Group 3")
 saveRDS(lst_all, file="../lst_all")
 
-#genes1 doesn't have unique genes 
-dgenes1 <- setdiff(genes1,c(genes2,genes3,genes4))
-dgenes2 <- setdiff(genes2,c(genes1,genes3,genes4))
-dgenes3 <- setdiff(genes3,c(genes1,genes2,genes4))
-dgenes4 <- setdiff(genes4,c(genes1,genes2, genes3))
-
-cat(dgenes2, sep=',')
-cat(dgenes3, sep=',')
-cat(dgenes4, sep=',')
-
-g1
-
-lst_each <- list(genes1,dgenes2,dgenes3,dgenes4)
-names(lst_each) <- c("Group 1", "Group 2", "Group 3", "Group 4")
-saveRDS(lst_all, file="../lst_each")
 
 lst_fun <- list(g1,g2,g3,g4)
-names(lst_fun) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+names(lst_fun) <- c("Group 1", "Group 2", "Group 3")
 lst_id <- list(g1i,g2i,g3i,g4i)
-names(lst_id) <- c("Group 1", "Group 2", "Group 3", "Group 4")
+names(lst_id) <- c("Group 1", "Group 2", "Group 3")
 
-saveRDS(lst_fun,"~/Vascular_Disease/genes/function")
-saveRDS(lst_id,"~/Vascular_Disease/genes/id")
+saveRDS(lst_fun,"~/Vascular_Disease/genes/function2")
+saveRDS(lst_id,"~/Vascular_Disease/genes/id2")
 dir.create("~/Vascular_Disease/genes")
-capture.output(lst_fun, file="~/Vascular_Disease/genes/function.txt")
-capture.output(lst_id, file="~/Vascular_Disease/genes/id.txt")
+capture.output(lst_fun, file="~/Vascular_Disease/genes/function2.txt")
+capture.output(lst_id, file="~/Vascular_Disease/genes/id2.txt")
 
-capture.output(cat(f[[1]], sep='\n'), file="~/Vascular_Disease/genes/function_1.txt")
-capture.output(cat(f[[2]], sep='\n'), file="~/Vascular_Disease/genes/function_2.txt")
-capture.output(cat(f[[3]], sep='\n'), file="~/Vascular_Disease/genes/function_3.txt")
-capture.output(cat(f[[4]], sep='\n'), file="~/Vascular_Disease/genes/function_4.txt")
 
-cat(setdiff(g1i, c(g2i,g3i)), sep="\n")
-cat(setdiff(g2i,c(g3i,g1i)), sep="\n")
-cat(setdiff(g3i,c(g1i,g2i)), sep="\n")
-cat(setdiff(g4i,c(g1i,g3i,g2i)), sep="\n")
 #Venn diagram
 
 ggvenn(
