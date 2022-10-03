@@ -64,12 +64,10 @@ mfun <- function(x) {
                 Vectorize(vfun)))
 }
 
-set.seed(2022)
-res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
-res_shc$hc_dat$labels <- rownames(patient_matrix)
+res_shc_r <- readRDS("~/Vascular_Disease/res_shc")
 
-referencia <- sigclust2::shcutree(res_shc,alpha = .08)
-names(referencia) <- res_shc$hc_dat$labels
+referencia <- sigclust2::shcutree(res_shc_r,alpha = .05)
+names(referencia) <- res_shc_r$hc_dat$labels
 
 ground_truth <- data.frame(referencia)
 ground_truth <- cbind(ground_truth,ground_truth[,1])
@@ -244,16 +242,12 @@ menor <- which(df[,1]>81)
 todos <- sort(intersect(may,menor),decreasing = T)
 df[todos,3] <- NA
 
-set.seed(2020)
-
-# The following part will generate some warnings that are expected (it removes labels for which df[,3] is NA, which is what we are looking for.)
-pdf('data/Plots/Figure_4.pdf')
+set.seed(2022)
 
 ggplot(df, aes(df[,2], df[,1], color = df[,1])) +
   geom_point(shape = 16, size = 3, show.legend = FALSE) +
   theme_minimal() +
   scale_color_gradient(high = "#0091ff", low = "#f0650e") +
   labs(y= "Accuracy", x = "Average genes per patient")+
-  geom_text_repel(aes(label=df[,3]),size=3,point.padding=0.25,force=2)+
+  geom_text_repel(aes(label=df[,3]),size=3,point.padding=0.25,force=2, max.overlaps = 14)+
   theme(legend.position ='none')
-dev.off()

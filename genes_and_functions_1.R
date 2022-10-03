@@ -120,115 +120,114 @@ mean_per_pair <- matrix(0, ncol= 30, nrow= 11)
 rownames(final_accuracy_matrix) <- as.character(0:10)
 rownames(final_kk_used) <- as.character(0:10)
 
-for(u in 1:11){ # 1 to 11 because of non 0-based language: If we want, for example, theta to be 0, we set u=1
-  for(val in 1:20){ #lambda
-    preserve_genes_per_patient <- genes_per_patient_list[[u]] # u==k == tetha + 1
-    genes_per_patient <- preserve_genes_per_patient
-    genes_per_patient <- lapply(genes_per_patient,function(x) x[x<=val]) #val = lambda. We filter the genes that are over the lambda value tested
-    
-    genes_per_patient_names <- lapply(genes_per_patient,function(x) unique(names(x)))
-    all_genes_possible <- unique(unlist(genes_per_patient_names,use.names=F))
-    
-    # Generate a 0-1 patient x genes matrix that acts as input for pamk, jaccard_ind and hclust.
-    n_genes_p_patients <- matrix(data= 0, nrow= nrow(ground_truth),ncol= length(all_genes_possible))
-    colnames(n_genes_p_patients) <- all_genes_possible
-    rownames(n_genes_p_patients) <- rownames(ground_truth)
-    
-    for(rowi in 1:nrow(n_genes_p_patients)){
-      n_genes_p_patients[rowi,] <- as.integer(colnames(n_genes_p_patients) %in% genes_per_patient_names[[rowi]])
+u <- 5 
+val <- 2  #lambda
+preserve_genes_per_patient <- genes_per_patient_list[[u]] # u==k == tetha + 1
+genes_per_patient <- preserve_genes_per_patient
+genes_per_patient <- lapply(genes_per_patient,function(x) x[x<=val]) #val = lambda. We filter the genes that are over the lambda value tested
+
+genes_per_patient_names <- lapply(genes_per_patient,function(x) unique(names(x)))
+all_genes_possible <- unique(unlist(genes_per_patient_names,use.names=F))
+
+# Generate a 0-1 patient x genes matrix that acts as input for pamk, jaccard_ind and hclust.
+n_genes_p_patients <- matrix(data= 0, nrow= nrow(ground_truth),ncol= length(all_genes_possible))
+colnames(n_genes_p_patients) <- all_genes_possible
+rownames(n_genes_p_patients) <- rownames(ground_truth)
+
+for(rowi in 1:nrow(n_genes_p_patients)){
+  n_genes_p_patients[rowi,] <- as.integer(colnames(n_genes_p_patients) %in% genes_per_patient_names[[rowi]])
+}
+
+
+patient_matrix <- n_genes_p_patients
+
+patient_matrix2 <- patient_matrix # Exclude patients with missing data from clustering
+
+#Get mean gene length
+all_lengths <- unlist(lapply(genes_per_patient_names,function(x) length(x)))
+media <- mean(all_lengths)
+
+#Obtain optimal clusters
+pamk.best <- pamk(patient_matrix2)
+kk <- pamk.best$nc ## kk is the optimal number of clusters for the particular optimization.
+
+# Perform hierarchical clustering with the suggested number of clusters
+patient_matrix3 <- t(patient_matrix2)
+set.seed(2020)
+res_hclust <- hclust(jaccard_ind(patient_matrix3),"ward.D2")
+res_shc_2 <- shc(t(patient_matrix3), matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
+res_shc_2$hc_dat$labels <- rownames(t(patient_matrix3))
+plot(res_shc_2,alpha=0.8,ci_emp=T,use_labs = TRUE)
+
+# Calculate two 0-1 matrices in order to compare our clustering with the ground truth.
+arbol <- cutree(res_hclust,kk)
+arbol_splited <- split(names(arbol),arbol)
+splited_ground_truth <- split(ground_truth[,1],ground_truth[,2])
+arbol_splited_mat <- matrix(0,ncol= nrow(ground_truth),nrow= nrow(ground_truth))
+ground_truth_mat <- matrix(0,ncol= nrow(ground_truth),nrow= nrow(ground_truth))
+dimnames(arbol_splited_mat) <- list(rownames(ground_truth),rownames(ground_truth))
+dimnames(ground_truth_mat) <- list(rownames(ground_truth),rownames(ground_truth))
+for(f in 1:nrow(arbol_splited_mat)){
+  current_patient_row <- rownames(ground_truth_mat)[f]
+  for(g in 1:ncol(arbol_splited_mat)){
+    current_patient_col <- colnames(ground_truth_mat)[g]
+    cluster_pat_row_ground_truth <- grep(current_patient_row,splited_ground_truth)
+    cluster_pat_col_ground_truth <- grep(current_patient_col,splited_ground_truth)
+    cluster_pat_row_arbol_splited <- grep(current_patient_row,arbol_splited)
+    cluster_pat_col_arbol_splited <- grep(current_patient_col,arbol_splited)
+    if(cluster_pat_row_ground_truth==cluster_pat_col_ground_truth){
+      ground_truth_mat[f,g] <- 1
+      ground_truth_mat[g,f] <- ground_truth_mat[f,g]
     }
-    
-    
-    patient_matrix <- n_genes_p_patients
-    
-    patient_matrix2 <- patient_matrix # Exclude patients with missing data from clustering
-    
-    #Get mean gene length
-    all_lengths <- unlist(lapply(genes_per_patient_names,function(x) length(x)))
-    media <- mean(all_lengths)
-    
-    #Obtain optimal clusters
-    pamk.best <- pamk(patient_matrix2)
-    kk <- pamk.best$nc ## kk is the optimal number of clusters for the particular optimization.
-    
-    # Perform hierarchical clustering with the suggested number of clusters
-    patient_matrix3 <- t(patient_matrix2)
-    set.seed(2020)
-    res_hclust <- hclust(jaccard_ind(patient_matrix3),"ward.D2")
-    res_shc_2 <- shc(t(patient_matrix3), matmet=mfun, linkage="ward.D2", n_sim = 1000,alpha = .08)
-    res_shc_2$hc_dat$labels <- rownames(t(patient_matrix3))
-    plot(res_shc_2,alpha=0.8,ci_emp=T,use_labs = TRUE)
-    
-    # Calculate two 0-1 matrices in order to compare our clustering with the ground truth.
-    arbol <- cutree(res_hclust,kk)
-    arbol_splited <- split(names(arbol),arbol)
-    splited_ground_truth <- split(ground_truth[,1],ground_truth[,2])
-    arbol_splited_mat <- matrix(0,ncol= nrow(ground_truth),nrow= nrow(ground_truth))
-    ground_truth_mat <- matrix(0,ncol= nrow(ground_truth),nrow= nrow(ground_truth))
-    dimnames(arbol_splited_mat) <- list(rownames(ground_truth),rownames(ground_truth))
-    dimnames(ground_truth_mat) <- list(rownames(ground_truth),rownames(ground_truth))
-    for(f in 1:nrow(arbol_splited_mat)){
-      current_patient_row <- rownames(ground_truth_mat)[f]
-      for(g in 1:ncol(arbol_splited_mat)){
-        current_patient_col <- colnames(ground_truth_mat)[g]
-        cluster_pat_row_ground_truth <- grep(current_patient_row,splited_ground_truth)
-        cluster_pat_col_ground_truth <- grep(current_patient_col,splited_ground_truth)
-        cluster_pat_row_arbol_splited <- grep(current_patient_row,arbol_splited)
-        cluster_pat_col_arbol_splited <- grep(current_patient_col,arbol_splited)
-        if(cluster_pat_row_ground_truth==cluster_pat_col_ground_truth){
-          ground_truth_mat[f,g] <- 1
-          ground_truth_mat[g,f] <- ground_truth_mat[f,g]
-        }
-        if(cluster_pat_row_arbol_splited==cluster_pat_col_arbol_splited){
-          arbol_splited_mat[f,g] <- 1
-          arbol_splited_mat[g,f] <- arbol_splited_mat[f,g]
-        }
-      }
+    if(cluster_pat_row_arbol_splited==cluster_pat_col_arbol_splited){
+      arbol_splited_mat[f,g] <- 1
+      arbol_splited_mat[g,f] <- arbol_splited_mat[f,g]
     }
-    
-    sum_matrix <- arbol_splited_mat + ground_truth_mat
-    tab_sum_matrix <- table(sum_matrix)
-    zeros <- tab_sum_matrix["0"] # True Negatives
-    if(is.na(zeros)){
-      zeros <- 0
-    }
-    twos <- tab_sum_matrix["2"] # True Positives
-    if(is.na(twos)){
-      twos <- 0
-    }
-    # Accuracy
-    accuracy <- (zeros+twos)/sum(tab_sum_matrix,na.rm = T)
-    final_accuracy_matrix[u,val] <- accuracy
-    # Matthew's Coefficient
-    sum_matrix[which(sum_matrix==1,arr.ind=T)] <- 6 #Set all false to value 6.
-    dif_sum_mat <- sum_matrix - arbol_splited_mat
-    dif_tab_sum_matrix <- table(dif_sum_mat)
-    sixes <- dif_tab_sum_matrix["6"] # False Positives
-    if(is.na(sixes)){
-      sixes <- 0
-    }
-    fives <- dif_tab_sum_matrix["5"] # False Negatives
-    if(is.na(fives)){
-      fives <- 0
-    }
-    tn <- as.double(unname(zeros))
-    tp <- as.double(unname(twos))
-    fp <- as.double(unname(fives))
-    fn <- as.double(unname(sixes))
-    numerador <- (tp * tn) - (fp * fn)
-    den_1 <- tp + fp
-    den_2 <- tp + fn
-    den_3 <- tn + fp
-    den_4 <- tn + fn
-    pro_den <- den_1 * den_2 * den_3 * den_4
-    denominador <- sqrt(pro_den)
-    matthews <- numerador/denominador
-    final_matthews_matrix[u,val] <- matthews
-    final_kk_used[u,val] <- kk
-    mean_per_pair[u,val] <- media
   }
 }
-    
+
+sum_matrix <- arbol_splited_mat + ground_truth_mat
+tab_sum_matrix <- table(sum_matrix)
+zeros <- tab_sum_matrix["0"] # True Negatives
+if(is.na(zeros)){
+  zeros <- 0
+}
+twos <- tab_sum_matrix["2"] # True Positives
+if(is.na(twos)){
+  twos <- 0
+}
+# Accuracy
+accuracy <- (zeros+twos)/sum(tab_sum_matrix,na.rm = T)
+final_accuracy_matrix[u,val] <- accuracy
+# Matthew's Coefficient
+sum_matrix[which(sum_matrix==1,arr.ind=T)] <- 6 #Set all false to value 6.
+dif_sum_mat <- sum_matrix - arbol_splited_mat
+dif_tab_sum_matrix <- table(dif_sum_mat)
+sixes <- dif_tab_sum_matrix["6"] # False Positives
+if(is.na(sixes)){
+  sixes <- 0
+}
+fives <- dif_tab_sum_matrix["5"] # False Negatives
+if(is.na(fives)){
+  fives <- 0
+}
+tn <- as.double(unname(zeros))
+tp <- as.double(unname(twos))
+fp <- as.double(unname(fives))
+fn <- as.double(unname(sixes))
+numerador <- (tp * tn) - (fp * fn)
+den_1 <- tp + fp
+den_2 <- tp + fn
+den_3 <- tn + fp
+den_4 <- tn + fn
+pro_den <- den_1 * den_2 * den_3 * den_4
+denominador <- sqrt(pro_den)
+matthews <- numerador/denominador
+final_matthews_matrix[u,val] <- matthews
+final_kk_used[u,val] <- kk
+mean_per_pair[u,val] <- media
+
+
 genes_interesantes <- lapply(genes_per_patient,names)
 genes_interesantes <- lapply(genes_interesantes,function(x) unname(mapIds(x = org.Hs.eg.db,keys =x,keytype = 'ENTREZID',column = 'SYMBOL')))
 

@@ -74,6 +74,13 @@ rownames(gene.lst.count) <- gene.lst
 l2 <- lapply(gene.lst.count,log2)
 l2 <- as.data.frame(lapply(l2,setNames,nm=gene.lst))
 
+#Alternative: Using selected genes from cliques (calculated in python using networkx)
+gene.lst <- colnames(read.csv("correlation/cliq_gene_sel.csv"))
+gene.counts <- read.csv("counts/counts_sel_overmean.csv", header=TRUE, row.names=1) + 1
+gene.lst.count <- gene.counts[gene.lst,]
+l2 <- lapply(gene.lst.count,log2)
+l2 <- as.data.frame(lapply(l2,setNames,nm=gene.lst))
+
 #Finding fold change between control and each patient
 ctrl <- l2[1]
 patients <- l2[-1]

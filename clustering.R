@@ -21,6 +21,7 @@ mfun <- function(x) {
 set.seed(2022)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
 res_shc$hc_dat$labels <- rownames(patient_matrix)
+saveRDS(res_shc, "~/Vascular_Disease/res_shc")
 png(file="plots/hc/hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
 plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
 dev.off()
@@ -73,7 +74,7 @@ for (m in 1:length(df.filt.lst2)) {
     df.filt.lst2[[m]] <- df.filt.lst2[[m]][-(1)]
   }
 }
-  
+
 post.mn.patients <- lapply(df.filt.lst2, function(x) names(x))
 post.mn.patients.matrix <- t(data.frame(lapply(post.mn.patients,function(x) as.integer(unique(unlist(post.mn.patients)) %in% x))))
 saveRDS(df.lst, file="~/Vascular_Disease/sel_hamming")
@@ -84,7 +85,7 @@ set.seed(2022)
 res_shc2 <- shc(post.mn.patients.matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
 res_shc2$hc_dat$labels <- rownames(post.mn.patients.matrix)
 
-png(file="plots/hc/hc_post_multi.png", width =465, height = 225, units = "mm", res=300)
+png(file="~/Vascular_Disease/plots/hc/hc_post_multi.png", width =465, height = 225, units = "mm", res=300)
 
 plot(res_shc2,alpha=0.5,ci_emp=T,use_labs = TRUE)
 
