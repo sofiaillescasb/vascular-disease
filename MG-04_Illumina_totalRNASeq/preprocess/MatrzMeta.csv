@@ -1,0 +1,7 @@
+Process ID,Sample ID,Sex,Mutant gene,Variant,Summary clinic,Summary pathological marker,Case-Control,Avg. Read Length,Uniquely Mapped,Uniquely Mapped Percent
+S_01,HUVECs_2,nd,nd,nd,nd,nd,control,146,117233123,88.40%
+S_02,HUVECs_3,nd,nd,nd,nd,nd,control,147,114383585,87.24%
+S_03,HUVECs_4,nd,nd,nd,nd,nd,control,149,116497959,88.42%
+S_04,HDLECs_1,nd,nd,nd,nd,nd,control,146,114857489,86.84%
+S_05,HDLECs_2,nd,nd,nd,nd,nd,control,146,115291141,87.59%
+S_06,HDLECs_3,nd,nd,nd,nd,nd,control,145,115438466,87.02%
