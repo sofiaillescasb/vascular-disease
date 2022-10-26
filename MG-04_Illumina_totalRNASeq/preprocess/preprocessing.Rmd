@@ -171,7 +171,7 @@ genes_or <- genes[order(genes)]
 
 # Volcano plot
 par(xpd=T, mar=par()$mar+c(0,0,0,5))
-with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,15))) 
+with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,8))) 
 with(subset(tt, logFC > 1.0), points(logFC, -log10(adj.P.Val), pch = 20, col="green"))
 with(subset(tt, logFC < -1.0), points(logFC, -log10(adj.P.Val), pch = 20, col="orange"))
 with(subset(tt, -log10(adj.P.Val) < 1.3), points(logFC, -log10(adj.P.Val), pch = 20, col="grey"))
@@ -227,7 +227,7 @@ ggbiplot(pca_norm_v, var.axes=FALSE, groups=se.v$Case.Control, labels = colnames
 
 # Venous volcano plot
 par(xpd=T, mar=par()$mar+c(0,0,0,5))
-with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,15))) 
+with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,8))) 
 
 
 with(subset(tt, logFC > 1.0), points(logFC, -log10(adj.P.Val), pch = 20, col="green"))
@@ -281,7 +281,7 @@ ggbiplot(pca_norm_l, var.axes=FALSE, groups=se.l$Case.Control, labels = colnames
 
 # Lymphatic volcano plot
 par(xpd=T, mar=par()$mar+c(0,0,0,5))
-with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,15))) 
+with(tt, plot(logFC, -log10(adj.P.Val), pch = 20, main = "", xlim=c(-6,7), ylim=c(0,2))) 
 
 
 with(subset(tt, logFC > 1.0), points(logFC, -log10(adj.P.Val), pch = 20, col="green"))

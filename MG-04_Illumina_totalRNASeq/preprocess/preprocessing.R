@@ -17,7 +17,6 @@ library(caret)
 library(psych)
 library(sigclust2)
 library(ggvenn)
-library(DESeq2)
 
 setwd("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/preprocess/")
 

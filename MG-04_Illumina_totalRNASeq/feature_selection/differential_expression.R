@@ -68,13 +68,67 @@ for (g in corr.groups){
 }
 
 se.sel <- readRDS("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/preprocess/se_sel")
+se.filt <- se.sel
 
-#DIFFERENTIAL EXPRESSION
+###################### DEAnalysis 1 ############################################
+# Without correcting
+se.filt$Case.Control <- relevel(se.filt$Case.Control, ref="control")
+mod <- model.matrix(~ se.filt$Case.Control, colData(se.filt))
+mod0 <- model.matrix(~ 1, colData(se.filt))
+pv <- f.pvalue(assays(se.filt)$logCPM.norm, mod, mod0)
+sum(p.adjust(pv, method="fdr") < 0.05)
+# 1811 DE genes
+
+# Distribution of expected p-values
+par(mfrow=c(1, 1))
+hist(pv, main="Distribution of expected p-values", las=1, ylim = c(0, 8000))
+
+# Correcting for the series
+se.filt$Batch <- c(1:43)
+se.filt$Batch[1:37] <- 1 
+se.filt$Batch[38:43] <- 2 
+if (length(unique(se.filt$Batch)) > 1){
+  mod_b <- model.matrix(~Case.Control + Batch, colData(se.filt))
+  mod0_b <- model.matrix(~Batch, colData(se.filt))
+  colnames(mod_b)
+  pValues_b <- f.pvalue(assays(se.filt)$logCPM,mod_b,mod0_b)
+  sum(p.adjust(pValues_b, method="fdr") < 0.05)
+} else {
+  print("There is only one series for this disease")
+}
+
+# Distribution of expected p-values after correcting for the series
+if (length(unique(se.filt$Batch)) > 1){
+  hist(pValues_b, main="Distribution of expected p-values after correcting for series", las=1)
+}
+
+# Mean-variance relationship
+FDRcutoff <- 0.05
+v <- voom(dge.filt.norm, mod, plot = TRUE) # Voom is applied to the normalized and filtered DGEList object
+fit <- lmFit(v, mod)
+fit<- eBayes(fit)
+res <- decideTests(fit, p.value = FDRcutoff)
+summary(res)
+
+# Add gene metadata (gene symbol) and fetch the table of results. Print first 15 sDEgenes
+rowRanges(se.filt)
+#genesmd <- data.frame(chr = as.character(seqnames(rowRanges(se.filt))), symbol = rowData(se.filt)[, 1], stringsAsFactors = FALSE)
+genesmd <- data.frame(symbol = rownames(res), stringsAsFactors = FALSE)
+fit$genes <- genesmd
+tt <- topTable(fit, coef = 2, n = Inf)
+head(tt, 15)
+
+
+
+#DIFFERENTIAL EXPRESSION 2
 
 gene.lst <- c(gene.lst,n.sel)
 gene.lst <- unlist(gsub("\\.","-",gene.lst), use.names = FALSE)
-se.sel2 <- se.sel[gene.lst,]
+se.sel2 <- se.sel
 assay(se.sel2) <- as.matrix(assay(se.sel2))
+se.sel2$Batch <- c(1:43)
+se.sel2$Batch[1:37] <- 1 
+se.sel2$Batch[38:43] <- 2 
 se.sel2$Batch <- factor(se.sel2$Batch)
 
 #Not correcting for batch
@@ -90,7 +144,7 @@ res05$padj[res05$padj < 0.05]
 resLFC <- lfcShrink(dds, coef="Case.Control_control_vs_case", type="apeglm")
 resLFC
 resOrdered <- res05[order(res05$pvalue),]
-genes <- rownames(resOrdered[1:166,])
+genes <- rownames(resOrdered[1:2287,])
 
 #correcting for batch
 dds_b <- DESeqDataSet(se.sel2, design = ~ Case.Control + Batch)
@@ -105,7 +159,7 @@ res05_b$padj[res05_b$padj < 0.05]
 resLFC_b <- lfcShrink(dds_b, coef="Batch_2_vs_1", type="apeglm")
 resLFC_b
 resOrdered_b <- res05_b[order(res05_b$pvalue),]
-genes <- rownames(resOrdered_b[1:10,])
+genes <- rownames(resOrdered_b[1:66,])
 genes
 
 # res05_l <- results(dds, contrast=c("group","case", "l_control"), alpha=0.05)
