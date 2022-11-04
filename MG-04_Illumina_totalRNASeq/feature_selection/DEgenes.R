@@ -1,9 +1,11 @@
 setwd("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/feature_selection")
 
 library(ggvenn)
+library(SummarizedExperiment)
+
+###################### DEAnalysis ############################################
 
 se.filt <- readRDS("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/preprocess/se_filt")
-genes_lst <- readRDS("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/preprocess/DEgenes")
 
 #Comparing all controls to all patients
 patients <- assays(se.filt)$logCPM.norm[genes_lst$`all patients vs all controls`,c(2:37)]
@@ -39,8 +41,5 @@ genes_per_patient_v <- lapply(v_per_patient, function(x) names(x))
 l_per_patient <- apply(fc_l, 2, function(x) x[x>1])
 genes_per_patient_l <- rownames(l_per_patient)
 
-#Trying to compare the values of DEgenes in venous control with the DE values of all the patients to try to find differences with non venous patients 
-not_in_common <- setdiff(genes_lst$venous, genes_lst$`all patients vs all controls`)
-comp_patients <- assays(se.filt)$logCPM.norm[genes_lst$venous[genes_lst$venous%in%not_in_common],c(2:37)]
-fc_comp_v <- apply(comp_patients, 2, function(x) abs(x-mean_v[rownames(mean_v)[rownames(mean_v)%in%not_in_common],]))
-sig_comp_v <- apply(fc_comp_v, 2, function(x) x[x>1])
+#Patients that aren't venous or lymphatic
+patients_o <- assays(se.filt[genes_lst$venous,se.filt$Summary.clinic=="venous malformation"])$logCPM.norm
