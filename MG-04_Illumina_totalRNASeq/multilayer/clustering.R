@@ -8,7 +8,7 @@ library(dendextend)
 library(circlize)
 
 setwd("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/feature_selection")
-g.lst <- readRDS("sel_genes_v")
+g.lst <- readRDS("sel_genes_l")
 patient_lst <- lapply(g.lst,function(x) as.integer(unique(unlist(g.lst)) %in% x))
 patient_matrix <- lapply(patient_lst, function(x) as.data.frame(x))
 
@@ -35,7 +35,7 @@ set.seed(2022)
 res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
 res_shc$hc_dat$labels <- rownames(patient_matrix)
 saveRDS(res_shc, "res_shc")
-png(file="hc_pre_multi.png", width =465, height = 225, units = "mm", res=300)
+png(file="hc_pre_multi_v.png", width =465, height = 225, units = "mm", res=300)
 plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
 dev.off()
 
@@ -47,6 +47,7 @@ inds <- which(!is.na(geneSymbols))
 found_genes <- geneSymbols[inds]
 
 g.lst.eid <- lapply(g.lst, function(x) found_genes[x])
+saveRDS(g.lst.eid, file="../multilayer/genes_per_patient")
 
 
 # using CmmD to generate base networks from files containing data extracted from databases
@@ -56,7 +57,7 @@ g.lst.eid <- lapply(g.lst, function(x) found_genes[x])
 #The next line was run in a separate bash terminal, because RStudio doesn't source from bashrc
 #com_results <- CmmD::CmmD(input_layers = redes,resolution_start = 0.5,resolution_end = 12,interval = 0.5,distmethod = 'hamming',threads = 7,destfile_community_analysis = 'Com_Out/')
 
-ham_dist <- read.csv("communities/hamming_distance_multilayer_network.tsv", sep ='')
+#ham_dist <- read.csv("~/Vascular_Disease/communities/hamming_distance_multilayer_network.tsv", sep ='')
 
 ifun <- function(g) {
   inx <- c()
@@ -89,19 +90,24 @@ for (m in 1:length(df.filt.lst2)) {
 }
 
 post.mn.patients <- lapply(df.filt.lst2, function(x) names(x))
-post.mn.patients.matrix <- t(data.frame(lapply(post.mn.patients,function(x) as.integer(unique(unlist(post.mn.patients)) %in% x))))
-saveRDS(df.lst, file="~/Vascular_Disease/sel_hamming")
-saveRDS(post.mn.patients, file="~/Vascular_Disease/filt_genes_per_patient")
+post.mn.patients.matrix <- lapply(post.mn.patients,function(x) as.integer(unique(unlist(post.mn.patients)) %in% x))
+post.mn.patients.matrix <- lapply(post.mn.patients.matrix, function(x) as.data.frame(x))
 
+for (i in 1:length(post.mn.patients.matrix)) {
+  rownames(post.mn.patients.matrix[[i]]) <- unique(unlist(post.mn.patients))
+}
 
-set.seed(2022)
-res_shc2 <- shc(post.mn.patients.matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
-res_shc2$hc_dat$labels <- rownames(post.mn.patients.matrix)
+post.mn.patients.matrix <- as.data.frame(post.mn.patients.matrix)
+colnames(post.mn.patients.matrix) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+                              "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
+                              "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
+                              "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
+                              "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
+                              "VM125", "VM127")
+post.mn.patients.matrix <- t(post.mn.patients.matrix)
 
-png(file="~/Vascular_Disease/plots/hc/hc_post_multi.png", width =465, height = 225, units = "mm", res=300)
+saveRDS(df.lst, file="sel_hamming_l")
+saveRDS(post.mn.patients, file="filt_genes_per_patient_l")
 
-plot(res_shc2,alpha=0.5,ci_emp=T,use_labs = TRUE)
-
-dev.off()
 
 
