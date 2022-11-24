@@ -113,35 +113,21 @@ l_known <- c("VM024", "VM038", "VM071", "VM072")
 others <- rownames(patient_matrix.l)[!(rownames(patient_matrix.l)%in%v_known)]
 others <- others[!(others%in%l_known)]
 
-ven_lst <- lapply(splited_patients.v[v_known],function(x) as.integer(unique(unlist(splited_patients.v[v_known],use.names=F)) %in% x))
-ven_matrix <- as.data.frame(ven_lst)
-rownames(ven_matrix) <- unique(unlist(splited_patients.v[v_known],use.names=F))
+all_lst.l <- lapply(splited_patients.l,function(x) as.integer(unique(unlist(splited_patients.l[l_known],use.names=F)) %in% x))
+all_matrix.l <- as.data.frame(all_lst.l)
+rownames(all_matrix.l) <- unique(unlist(splited_patients.l[l_known],use.names=F))
 
-lymph_lst <- lapply(splited_patients.l[l_known],function(x) as.integer(unique(unlist(splited_patients.l[l_known],use.names=F)) %in% x))
-lymph_matrix <- as.data.frame(lymph_lst)
-rownames(lymph_matrix) <- unique(unlist(splited_patients.l[l_known],use.names=F))
 
-others_lst.l <- lapply(splited_patients.l[others],function(x) as.integer(unique(unlist(splited_patients.l[l_known],use.names=F)) %in% x))
-others_matrix.l <- as.data.frame(others_lst.l)
-rownames(others_matrix.l) <- unique(unlist(splited_patients.l[l_known],use.names=F))
-others_matrix.l <- others_matrix.l*(-1)
+all_lst.v <- lapply(splited_patients.v,function(x) as.integer(unique(unlist(splited_patients.v[v_known],use.names=F)) %in% x))
+all_matrix.v <- as.data.frame(all_lst.v)
+rownames(all_matrix.v) <- unique(unlist(splited_patients.v[v_known],use.names=F))
 
-others_lst.v <- lapply(splited_patients.v[others],function(x) as.integer(unique(unlist(splited_patients.v[v_known],use.names=F)) %in% x))
-others_matrix.v <- as.data.frame(others_lst.v)
-rownames(others_matrix.v) <- unique(unlist(splited_patients.v[v_known],use.names=F))
+tot_v <- apply(all_matrix.v, 2, sum)
+tot_l <- apply(all_matrix.l, 2, sum)
 
-sum(others_matrix.v$VM055) + sum(others_matrix.l$VM055)
-sum(others_matrix.v$VM054) + sum(others_matrix.l$VM054)
-
-tot_v <- apply(others_matrix.v, 2, sum)
-tot_l <- apply(others_matrix.l, 2, sum)
-
-tot <- tot_v + tot_l
+tot <- tot_v - tot_l
 tot <- tot[order(tot)]
-cols <- c("#0000CC", "#0000CC", "#1034A6", "#1034A6", "#412F88", "#1034A6", "#722B6A", "#722B6A", "#A2264B", "#A2264B", "#D3212D", "#D3212D", "#F62D2D", "#F62D2D")
-plot(c(tot)[-c(4)], rep(1,length(tot[-c(4)])),axes=F,xlab="",ylab="",type="o",pch=19, col=cols)
-text(c(tot)[-c(4)], rep(1,length(tot[-c(4)])),names(tot)[-c(4)],xpd=T, pos=1,xpd=T, srt=45,cex=0.7, offset=1)
-text(c(tot)[4], rep(1,length(tot[4])),names(tot)[4],xpd=T, pos=3,xpd=T, srt=45,cex=0.7, offset=1)
-
-
+plot(c(c(c(tot[l_known]),tot[others]),c(tot[v_known])), rep(1,length(tot)),axes=F,xlab="",ylab="",type="o",pch=19, col=c(rep("#3776d4",length(l_known)),rep("#000000",length(others)),rep("#d62d3b",length(v_known))))
+text(c(tot)[others[-c(9)]], rep(1,length(tot[others[-c(9)]])),names(tot[others[-c(9)]]),xpd=T, pos=1,xpd=T, srt=45,cex=0.7, offset=1)
+text(c(tot)[others[9]], rep(1,length(tot[others[9]])),names(tot[others[9]]),xpd=T, pos=3,xpd=T, srt=45,cex=0.7, offset=1)
 
