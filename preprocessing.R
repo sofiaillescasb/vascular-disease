@@ -147,34 +147,34 @@ tsne_by_perplex <- function(s=se.filt, metadata=metadata) {
   s$simplified_type <- gsub("case","",s$simplified_type)
   
   if(perplex1 <= max_perplex){
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=perplex1, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex1"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
-  
-  
-  if(optimal_perplex <= max_perplex){
-    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
-    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=optimal_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex2"))
-    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
-    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=perplex1, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex1"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=perplex1, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
     
     
-    if(perplex3 <= max_perplex){
-      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
-      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=perplex3, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex3"))
-      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
-      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
+    if(optimal_perplex <= max_perplex){
+      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
+      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=optimal_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex2"))
+      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
+      print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=optimal_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex2"))
+      
+      
+      if(perplex3 <= max_perplex){
+        print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
+        print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=perplex3, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on normalized counts perplex3"))
+        print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
+        print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=perplex3, seed=TRUE) + ggtitle("tsne based on normalized counts perplex3"))
+      }
     }
   }
-}
-
-if(max_perplex %in% c(perplex1,optimal_perplex,perplex3)){
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=max_perplex, seed=TRUE)  + ggtitle("tsne based on normalized counts max_perplex"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=max_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on logCPM perplex3"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=max_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
-  print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=max_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on logCPM perplex3"))
-}
+  
+  if(max_perplex %in% c(perplex1,optimal_perplex,perplex3)){
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Case.Control, perplex=max_perplex, seed=TRUE)  + ggtitle("tsne based on normalized counts max_perplex"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Mutant.gene, perplex=max_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on logCPM perplex3"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Summary.clinic, perplex=max_perplex, seed=TRUE) + ggtitle("tsne based on normalized counts perplex1"))
+    print(tsne(as.data.frame(assays(s)$logCPM.norm), labels=s$Variant, perplex=max_perplex, seed=TRUE, text=as.character(s$simplified_type)) + ggtitle("tsne based on logCPM perplex3"))
+  }
 }
 tsne_by_perplex()
 
@@ -199,7 +199,7 @@ plot_hierarchichal_clustering <- function(data,info, save_clusters=FALSE, key_wo
   plot(pvclust_result)
   clusters <- pvpick(pvclust_result) # Returns the clusters and GSMs in it.
   pvrect(pvclust_result)
-
+  
   # # Coloring by mutation
   colors = brewer.pal(length(unique(metadata$Mutant.gene)),"Set3")
   colors = colors[as.factor(se.filt$Mutant.gene)]
@@ -308,4 +308,8 @@ corr.df.t <- as.data.frame(c$t)
 write.csv(corr.df, "~/Vascular_Disease/correlation_matrix.csv")
 write.csv(corr.df.p, "~/Vascular_Disease/correlation_p.csv")
 write.csv(corr.df.t, "~/Vascular_Disease/correlation_t.csv")
+
+
+
+
 

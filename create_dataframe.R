@@ -30,6 +30,26 @@ for (i in 2:38) {
   all_samples[i] = reverse_counts[i-1] 
 }
 
-colnames(all_samples) <- unlist(samples)
-all_samples
-write.csv(all_samples, "assay.csv", row.names = FALSE, quote = FALSE)
+colnames(all_samples)[-1] <- c("HUVECS", "VM015",  "VM024",  "VM038",  "VM040",  "VM042",  "VM043",  "VM048",  "VM053",  "VM054",  "VM055", 
+                          "VM056",  "VM060",  "VM064",  "VM066",  "VM068",  "VM071",  "VM072",  "VM073",  "VM081",  "VM082",  "VM083", 
+                           "VM085",  "VM089",  "VM090",  "VM092",  "VM093",  "VM099",  "VM103",  "VM108",  "VM110",  "VM111",  "VM113", 
+                           "VM119",  "VM124", "VM125",  "VM127")
+
+write.csv(all_samples, "../counts/assay.csv", row.names = FALSE, quote = FALSE)
+
+#Importing counts data
+counts <- read.csv("../counts/assay.csv", header=TRUE, row.names=1)
+list(counts)
+head(rownames(counts))
+#Importing sample metadata
+meta <- read.csv("../se/MatrzMeta.csv", header=TRUE, row.names = 2)
+head(meta)
+
+#Creating SummarizedExperiment object
+se <- SummarizedExperiment(assays=list(counts=counts), colData=meta)
+
+# Data exploration
+metadata <- as.data.frame(colData(se))
+head(metadata)
+
+saveRDS(se, file="../se/se_org")
