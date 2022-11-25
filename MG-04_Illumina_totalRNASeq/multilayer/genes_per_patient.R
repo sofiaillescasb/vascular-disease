@@ -254,7 +254,7 @@ text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
 #text(x, rownames(x[ord[odd],]),xpd=T, pos=3, srt=90,cex=1, offset=1.7)
 #text(x[-c(ord[odd]),], rownames(x[-c(ord[odd]),]),xpd=T, pos=1, srt=90,cex=1, offset=1.7)
 abline(h=0.6)
-abline(v=0.58)
+abline(v=0.55)
 names.genes.v <- lapply(genes_per_patient.v, function(x) names(x))
 names.genes.v <- lapply(genes_per_patient.l, function(x) names(x))
 
