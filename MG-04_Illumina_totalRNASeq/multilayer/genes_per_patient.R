@@ -40,7 +40,7 @@ library(ggvenn)
 library(RColorBrewer)
 
 
-sel.ham.v <- readRDS("../feature_selection/sel_hamming_v") #table generated in clustering.R 
+sel.ham.v <- readRDS("../feature_selection/sel_hamming_v") #table generated in clustering.R, maybe change this to go from pre multi 
 sel.ham.l <- readRDS("../feature_selection/sel_hamming_l") #table generated in clustering.R 
 hamming_com <- read.table("~/Vascular_Disease/communities/hamming_distance_multilayer_network.tsv",sep='\t') #hamming distance matrix obtained from repository, script for generation at ~/Vascular_Disease/generate_multilayer.R
 colnames(hamming_com) <- rownames(hamming_com)
@@ -209,52 +209,89 @@ names(genes_per_patient.l) <- paste0(names(genes_per_patient.l), ".l")
 names(genes_per_patient.v) <- paste0(names(genes_per_patient.v), ".v")
 
 v.and.l <- c(genes_per_patient.v, genes_per_patient.l)
-dif.lst.v <- list(seq(1,36))
-dif.lst.l <- list(seq(1,36))
-int.lst <- list(seq(1,36))
 union.lst <- list(seq(1,36))
 
 for (j in 1:(length(v.and.l)/2)) {
-  dif.lst.v[[j]] <- setdiff(names(v.and.l[[j]]), names(v.and.l[[j+36]]))
-  dif.lst.l[[j]] <- setdiff(names(v.and.l[[j+36]]), names(v.and.l[[j]]))
-  int.lst[[j]] <- intersect(names(v.and.l[[j+36]]), names(v.and.l[[j]]))
+  union.lst[[j]] <- union(names(v.and.l[[j+36]]), names(v.and.l[[j]]))
   }
 
 
 
-names(dif.lst.v) <- rownames(patient_matrix.l)
-names(dif.lst.l) <- rownames(patient_matrix.l)
-names(int.lst) <- rownames(patient_matrix.l)
+names(union.lst) <- rownames(patient_matrix.l)
 
 
+pct.v <- c()
+pct.l <- c()
 
-pct <- c()
-
-for (e in 1:length(names(dif.lst.v))) {
-  both <- length(dif.lst.v[[e]]) + length(dif.lst.l[[e]])
-  pct[e] <- length(dif.lst.v[[e]])/both-length(dif.lst.l[[e]])/both
+for (e in 1:length(names(union.lst))) {
+  pct.v[e] <- length(genes_per_patient.v[[e]])/length(union.lst[[e]])
+  pct.l[e] <- length(genes_per_patient.l[[e]])/length(union.lst[[e]])
 }
-names(pct) <- rownames(patient_matrix.l)
 
+names(pct.v) <- rownames(patient_matrix.l)
+names(pct.l) <- rownames(patient_matrix.l)
 
+#plotting patients according to the percentages of venous and lymphatic "DE" genes
 
-ord <- order(pct)
-odd <- seq(1,36,by=2)
-x <- data.frame(pct,1)
-pct <- pct[order(names(pct))]
-pct <- pct[order(conditions)]
-conditions <- conditions[order(conditions)]
+# ord <- order(pct)
+# odd <- seq(1,36,by=2)
+#x <- data.frame(pct,1)
+pct.v <- pct.v[order(names(pct.v))]
+pct.l <- pct.l[order(names(pct.l))]
+# pct <- pct[order(conditions)]
+conditions <- conditions[order(names(conditions))]
 
-df <- data.frame(pct,conditions)
+df <- data.frame(pct.v,pct.l,conditions)
 df$conditions <- as.factor(df$conditions)
 df$conditions_new <- as.numeric(df$conditions)
-df <- df[order(df$pct),]
-height <- rep(1,length(df$pct))
-df <- data.frame(df,height)
+# df <- df[order(df$pct),]
+# height <- rep(1,length(df$pct))
+# df <- data.frame(df,height)
 
 palette(brewer.pal(n = 11, name = "Paired"))
-plot(df$pct, df$height, type="o",pch=19,axes=F,xlab="",ylab="", col=df$conditions_new)
-text(x[ord[odd],], rownames(x[ord[odd],]),xpd=T, pos=3, srt=90,cex=1, offset=1.7)
-text(x[-c(ord[odd]),], rownames(x[-c(ord[odd]),]),xpd=T, pos=1, srt=90,cex=1, offset=1.7)
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$conditions_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+#text(x, rownames(x[ord[odd],]),xpd=T, pos=3, srt=90,cex=1, offset=1.7)
+#text(x[-c(ord[odd]),], rownames(x[-c(ord[odd]),]),xpd=T, pos=1, srt=90,cex=1, offset=1.7)
+abline(h=0.6)
+abline(v=0.58)
+names.genes.v <- lapply(genes_per_patient.v, function(x) names(x))
+names.genes.v <- lapply(genes_per_patient.l, function(x) names(x))
+
+names(names.genes.v) <- rownames(patient_matrix.l)
+names(names.genes.l) <- rownames(patient_matrix.l)
+
+#Get jaccard distance per patient venous vs. lymphatic for pre and post-multilayer network genes
+
+lst_all_post <- Map(c,names.genes.v, names.genes.l)
+
+patient_lst_post <- lapply(lst_all_post,function(x) as.integer(unique(unlist(lst_all_post)) %in% x))
+patient_matrix_post <- lapply(patient_lst_post, function(x) as.data.frame(x))
+patient_matrix_post <- lapply(patient_matrix_post, function(x) as.data.frame(x))
+patient_matrix_post <- as.data.frame(patient_matrix_post)
+rownames(patient_matrix_post) <- unique(unlist(lst_all_post))
+colnames(patient_matrix_post) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+                                  "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
+                                  "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
+                                  "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
+                                  "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
+                                  "VM125", "VM127")
+
+
+
+g.lst.l <- readRDS("../feature_selection/sel_genes_l")
+g.lst.v <- readRDS("../feature_selection/sel_genes_v")
+lst_all_pre <- Map(c,g.lst.v,g.lst.l)
+patient_lst_pre <- lapply(lst_all_pre,function(x) as.integer(unique(unlist(lst_all_pre)) %in% x))
+patient_matrix_pre <- lapply(patient_lst_pre, function(x) as.data.frame(x))
+patient_matrix_pre <- lapply(patient_matrix_pre, function(x) as.data.frame(x))
+patient_matrix_pre <- as.data.frame(patient_matrix_pre)
+rownames(patient_matrix_pre) <- unique(unlist(lst_all_pre))
+colnames(patient_matrix_pre) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+                              "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
+                              "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
+                              "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
+                              "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
+                              "VM125", "VM127")
 
 
