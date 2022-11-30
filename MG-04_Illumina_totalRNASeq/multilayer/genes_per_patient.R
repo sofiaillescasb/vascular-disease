@@ -38,11 +38,11 @@ library(AnnotationDbi)
 library(org.Hs.eg.db)
 library(ggvenn)
 library(RColorBrewer)
+library(SummarizedExperiment)
 
-
-sel.ham.v <- readRDS("../feature_selection/sel_hamming_v") #table generated in clustering.R, maybe change this to go from pre multi 
-sel.ham.l <- readRDS("../feature_selection/sel_hamming_l") #table generated in clustering.R 
-hamming_com <- read.table("~/Vascular_Disease/communities/hamming_distance_multilayer_network.tsv",sep='\t') #hamming distance matrix obtained from repository, script for generation at ~/Vascular_Disease/generate_multilayer.R
+sel.ham.v <- readRDS("../feature_selection/sel_hamming_v2") #table generated in clustering.R, maybe change this to go from pre multi 
+sel.ham.l <- readRDS("../feature_selection/sel_hamming_l2") #table generated in clustering.R 
+hamming_com <- read.csv("multilayer/hamming_2022.csv")
 colnames(hamming_com) <- rownames(hamming_com)
 
 # Load genes associated to each patient from factor selection
@@ -129,17 +129,18 @@ other.con <- c("strange case",
                "capillary malformation", 
                "capillary malformation",
                "eccrine angiomatous hamartoma",
-               "fibroadipose vascular anomaly (FAVA): lymphatic component",
-               "fibroadipose vascular anomaly (FAVA): lymphatic component",
+               "FAVA: lymphatic component",
+               "FAVA: lymphatic component",
                "glomuvenous malformation",
                "infantile hemangioma",
                "infantile hemangioma",
                "venolymphatic malformation",
                "venolymphatic malformation",
                "venolymphatic malformation",
-               "venous malformation or hemangioma?",
+               "venous malformation/hemangioma?",
                "venous malformation: hiperplasia"
 )
+
 
 conditions <- c(rep("venous malformation",length(v_known)),other.con,rep("lymphatic malformation",length(l_known)))
 
@@ -233,36 +234,129 @@ names(pct.l) <- rownames(patient_matrix.l)
 
 #plotting patients according to the percentages of venous and lymphatic "DE" genes
 
-# ord <- order(pct)
-# odd <- seq(1,36,by=2)
-#x <- data.frame(pct,1)
 pct.v <- pct.v[order(names(pct.v))]
 pct.l <- pct.l[order(names(pct.l))]
-# pct <- pct[order(conditions)]
 conditions <- conditions[order(names(conditions))]
 
 df <- data.frame(pct.v,pct.l,conditions)
 df$conditions <- as.factor(df$conditions)
 df$conditions_new <- as.numeric(df$conditions)
-# df <- df[order(df$pct),]
-# height <- rep(1,length(df$pct))
-# df <- data.frame(df,height)
+
 
 palette(brewer.pal(n = 11, name = "Paired"))
 plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$conditions_new)
 text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
-#text(x, rownames(x[ord[odd],]),xpd=T, pos=3, srt=90,cex=1, offset=1.7)
-#text(x[-c(ord[odd]),], rownames(x[-c(ord[odd]),]),xpd=T, pos=1, srt=90,cex=1, offset=1.7)
 abline(h=0.6)
-abline(v=0.58)
-names.genes.v <- lapply(genes_per_patient.v, function(x) names(x))
-names.genes.v <- lapply(genes_per_patient.l, function(x) names(x))
+abline(v=0.55)
+legend("bottomleft",legend=unique(df$conditions),cex=0.7,fill=unique(df$conditions_new),bty = "n",y.intersp=0.6)
 
-names(names.genes.v) <- rownames(patient_matrix.l)
-names(names.genes.l) <- rownames(patient_matrix.l)
+
+#See how the patients separate based on mutation
+other.mut <- c("TEK",
+               "PIK3CA",
+               "PTEN",
+               "TEK",
+               "PIK3CA",
+               "nd",
+               "nd",
+               "TEK",
+               "nd",
+               "nd",
+               "nd",
+               "nd",
+               "PIK3CA",
+               "TEK",
+               "nd",
+               "nd",
+               "PIK3CA",
+               "PIK3CA",
+               "nd",
+               "nd",
+               "nd",
+               "nd",
+               "PIK3CA",
+               "PIK3CA",
+               "nd",
+               "nd",
+               "TEK",
+               "nd",
+               "TEK",
+               "PIK3CA",
+               "TEK",
+               "TEK",
+               "nd",
+               "PIK3CA",
+               "PIK3CA",
+               "nd"
+)
+
+df$mutation <- as.factor(other.mut)
+df$mutations_new <- as.numeric(df$mutation)
+
+palette(brewer.pal(n = 4, name = "Set2"))
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$mutations_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+abline(h=0.6)
+abline(v=0.55)
+legend("bottomleft",legend=unique(df$mutation),cex=0.7,fill=unique(df$mutations_new),bty = "n",y.intersp=0.6)
+
+other.var <- c(
+  "L914F",
+  "E545K",
+  "Arg14GlufsX29",
+  "T1105N:G1115Ter",
+  "E542K",
+  "nd",
+  "nd",
+  "T1105N:T1106P",
+  "nd",
+  "nd",
+  "nd",
+  "nd",
+  "H1047R",
+  "L914F",
+  "nd",
+  "nd",
+  "E545K",
+  "E542K",
+  "nd",
+  "nd",
+  "nd",
+  "nd",
+  "E542K",
+  "E545G",
+  "nd",
+  "nd",
+  "L914F",
+  "nd",
+  "L914F",
+  "Q546R",
+  "L914F",
+  "R1099Ter",
+  "nd",
+  "E545K",
+  "H1047R",
+  "nd"
+)
+
+
+df$variant <- as.factor(other.var)
+df$variant_new <- as.numeric(df$variant)
+
+palette(brewer.pal(n = 11, name = "Paired"))
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$variant_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+abline(h=0.6)
+abline(v=0.55)
+legend("bottomleft",legend=unique(df$variant),cex=0.7,fill=unique(df$variant_new),bty = "n",y.intersp=0.6)
+
+
 
 #Get jaccard distance per patient venous vs. lymphatic for pre and post-multilayer network genes
-
+names.genes.v <- lapply(genes_per_patient.v, function(x) names(x))
+names.genes.l <- lapply(genes_per_patient.l, function(x) names(x))
+names(names.genes.v) <- rownames(patient_matrix.l)
+names(names.genes.l) <- rownames(patient_matrix.l)
 lst_all_post <- Map(c,names.genes.v, names.genes.l)
 
 patient_lst_post <- lapply(lst_all_post,function(x) as.integer(unique(unlist(lst_all_post)) %in% x))

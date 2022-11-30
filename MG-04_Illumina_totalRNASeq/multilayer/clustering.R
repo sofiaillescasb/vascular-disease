@@ -8,7 +8,7 @@ library(dendextend)
 library(circlize)
 
 setwd("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/feature_selection")
-g.lst <- readRDS("sel_genes_l")
+g.lst <- readRDS("sel_genes_v")
 patient_lst <- lapply(g.lst,function(x) as.integer(unique(unlist(g.lst)) %in% x))
 patient_matrix <- lapply(patient_lst, function(x) as.data.frame(x))
 
@@ -47,7 +47,7 @@ inds <- which(!is.na(geneSymbols))
 found_genes <- geneSymbols[inds]
 
 g.lst.eid <- lapply(g.lst, function(x) found_genes[x])
-saveRDS(g.lst.eid, file="../multilayer/genes_per_patient")
+saveRDS(g.lst.eid, file="../multilayer/genes_per_patientv2")
 
 
 # using CmmD to generate base networks from files containing data extracted from databases
@@ -57,7 +57,8 @@ saveRDS(g.lst.eid, file="../multilayer/genes_per_patient")
 #The next line was run in a separate bash terminal, because RStudio doesn't source from bashrc
 #com_results <- CmmD::CmmD(input_layers = redes,resolution_start = 0.5,resolution_end = 12,interval = 0.5,distmethod = 'hamming',threads = 7,destfile_community_analysis = 'Com_Out/')
 
-#ham_dist <- read.csv("~/Vascular_Disease/communities/hamming_distance_multilayer_network.tsv", sep ='')
+ham_dist <- read.csv("multilayer/hamming_2022.csv")
+
 
 ifun <- function(g) {
   inx <- c()
@@ -106,8 +107,8 @@ colnames(post.mn.patients.matrix) <- c("VM015", "VM024", "VM038", "VM040", "VM04
                               "VM125", "VM127")
 post.mn.patients.matrix <- t(post.mn.patients.matrix)
 
-saveRDS(df.lst, file="sel_hamming_l")
-saveRDS(post.mn.patients, file="filt_genes_per_patient_l")
+saveRDS(df.lst, file="sel_hamming_v2")
+saveRDS(post.mn.patients, file="filt_genes_per_patient_v2")
 
 
 
