@@ -246,8 +246,8 @@ df$conditions_new <- as.numeric(df$conditions)
 palette(brewer.pal(n = 11, name = "Paired"))
 plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$conditions_new)
 text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
-abline(h=0.6)
-abline(v=0.55)
+abline(h=0.50)
+abline(v=0.62)
 legend("bottomleft",legend=unique(df$conditions),cex=0.7,fill=unique(df$conditions_new),bty = "n",y.intersp=0.6)
 
 
@@ -296,8 +296,8 @@ df$mutations_new <- as.numeric(df$mutation)
 palette(brewer.pal(n = 4, name = "Set2"))
 plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$mutations_new)
 text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
-abline(h=0.6)
-abline(v=0.55)
+abline(h=0.50)
+abline(v=0.62)
 legend("bottomleft",legend=unique(df$mutation),cex=0.7,fill=unique(df$mutations_new),bty = "n",y.intersp=0.6)
 
 other.var <- c(
@@ -346,8 +346,8 @@ df$variant_new <- as.numeric(df$variant)
 palette(brewer.pal(n = 11, name = "Paired"))
 plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$variant_new)
 text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
-abline(h=0.6)
-abline(v=0.55)
+abline(h=0.50)
+abline(v=0.62)
 legend("bottomleft",legend=unique(df$variant),cex=0.7,fill=unique(df$variant_new),bty = "n",y.intersp=0.6)
 
 
