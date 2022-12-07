@@ -1,114 +1,147 @@
-library(sigclust2)
 library(jaccard)
 library(AnnotationDbi)
 library(org.Hs.eg.db)
-library(gprofiler2)
-library(dendroextras)
-library(dendextend)
-library(circlize)
+library(RColorBrewer)
 
-setwd("~/Vascular_Disease/MG-04_Illumina_totalRNASeq/feature_selection")
-g.lst <- readRDS("sel_genes_v")
-patient_lst <- lapply(g.lst,function(x) as.integer(unique(unlist(g.lst)) %in% x))
-patient_matrix <- lapply(patient_lst, function(x) as.data.frame(x))
 
-for (i in 1:length(patient_matrix)) {
-  rownames(patient_matrix[[i]]) <- unique(unlist(g.lst))
+
+setwd("/Users/sofiaillescas/Desktop/Vascular_Disease/vascular-disease/MG-04_Illumina_totalRNASeq/feature_selection")
+g.lst.v <- readRDS("sel_genes_v")
+g.lst.l <- readRDS("sel_genes_l")
+
+meta <- read.csv("../metadata.csv",row.names = 1)
+
+patient_lst.v <- lapply(g.lst.v,function(x) as.integer(unique(unlist(g.lst.v)) %in% x))
+patient_matrix.v <- lapply(patient_lst.v, function(x) as.data.frame(x))
+
+for (i in 1:length(patient_matrix.v)) {
+  rownames(patient_matrix.v[[i]]) <- unique(unlist(g.lst.v))
 }
 
-patient_matrix <- lapply(patient_matrix, function(x) as.data.frame(x))
-patient_matrix <- as.data.frame(patient_matrix)
-colnames(patient_matrix) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+patient_matrix.v <- lapply(patient_matrix.v, function(x) as.data.frame(x))
+patient_matrix.v <- as.data.frame(patient_matrix.v)
+colnames(patient_matrix.v) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
                               "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
                               "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
                               "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
                               "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
                               "VM125", "VM127")
-patient_matrix <- t(patient_matrix)
-vfun <- function(x, y) {1 - jaccard(x, y)}
-mfun <- function(x) {
-  as.dist(outer(split(x, f = row(x)), split(x, f = row(x)),
-                Vectorize(vfun)))
-}
-
-set.seed(2022)
-res_shc <- shc(patient_matrix, matmet=mfun, linkage="ward.D2", n_sim = 1000)
-res_shc$hc_dat$labels <- rownames(patient_matrix)
-saveRDS(res_shc, "res_shc")
-png(file="hc_pre_multi_v.png", width =465, height = 225, units = "mm", res=300)
-plot(res_shc,alpha=0.5,ci_emp=T,use_labs = TRUE)
-dev.off()
+patient_matrix.v <- t(patient_matrix.v)
 
 #Mapping gene IDs
 
-geneSymbols <- mapIds(org.Hs.eg.db, keys=rownames(t(patient_matrix)), keytype="SYMBOL", column="ENTREZID", multiVals="first")
+geneSymbols <- mapIds(org.Hs.eg.db, keys=rownames(t(patient_matrix.v)), keytype="SYMBOL", column="ENTREZID", multiVals="first")
 head(geneSymbols)
 inds <- which(!is.na(geneSymbols))
 found_genes <- geneSymbols[inds]
 
-g.lst.eid <- lapply(g.lst, function(x) found_genes[x])
-saveRDS(g.lst.eid, file="../multilayer/genes_per_patientv2")
+g.lst.eid.v <- lapply(g.lst.v, function(x) found_genes[x])
+saveRDS(g.lst.eid.v, file="../multilayer/genes_per_patientv2")
 
+#Same process but using the genes that were selected as different from the lymphatic controls
 
-# using CmmD to generate base networks from files containing data extracted from databases
+patient_lst.l <- lapply(g.lst.l,function(x) as.integer(unique(unlist(g.lst.l)) %in% x))
+patient_matrix.l <- lapply(patient_lst.l, function(x) as.data.frame(x))
 
-#redes <- paste0('gene_multilayer_network-master/networks/',list.files('gene_multilayer_network-master/networks/'))
-
-#The next line was run in a separate bash terminal, because RStudio doesn't source from bashrc
-#com_results <- CmmD::CmmD(input_layers = redes,resolution_start = 0.5,resolution_end = 12,interval = 0.5,distmethod = 'hamming',threads = 7,destfile_community_analysis = 'Com_Out/')
-
-ham_dist <- read.csv("multilayer/hamming_2022.csv")
-
-
-ifun <- function(g) {
-  inx <- c()
-  for (k in 1:(length(g))) {
-      inx <- c(inx,which(rownames(ham_dist)==g[k]))
-  }
-  return(inx)
+for (i in 1:length(patient_matrix.l)) {
+  rownames(patient_matrix.l[[i]]) <- unique(unlist(g.lst.l))
 }
 
-index.lst <- lapply(g.lst.eid, function(x) ifun(x))
-
-#Making a list of the patients' dataframes
-df.lst <- lapply(index.lst, function(x) ham_dist[x,x])
-
-cfun <- function(d,n) {
-  df.filt <- apply(d, 1, function(x) which(x!=24))
-}
-
-df.filt.lst <- lapply(df.lst, cfun)
-df.filt.lst2 <- df.filt.lst
-
-#Removing genes that only form communities with themselves
-
-for (m in 1:length(df.filt.lst2)) {
-  len <- sapply(df.filt.lst[[m]], length)
-  df.filt.lst2[[m]] <- df.filt.lst[[m]][order(len)]
-  if (length(df.filt.lst2[[m]][[1]])==1) {
-    df.filt.lst2[[m]] <- df.filt.lst2[[m]][-(1)]
-  }
-}
-
-post.mn.patients <- lapply(df.filt.lst2, function(x) names(x))
-post.mn.patients.matrix <- lapply(post.mn.patients,function(x) as.integer(unique(unlist(post.mn.patients)) %in% x))
-post.mn.patients.matrix <- lapply(post.mn.patients.matrix, function(x) as.data.frame(x))
-
-for (i in 1:length(post.mn.patients.matrix)) {
-  rownames(post.mn.patients.matrix[[i]]) <- unique(unlist(post.mn.patients))
-}
-
-post.mn.patients.matrix <- as.data.frame(post.mn.patients.matrix)
-colnames(post.mn.patients.matrix) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+patient_matrix.l <- lapply(patient_matrix.l, function(x) as.data.frame(x))
+patient_matrix.l <- as.data.frame(patient_matrix.l)
+colnames(patient_matrix.l) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
                               "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
                               "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
                               "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
                               "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
                               "VM125", "VM127")
-post.mn.patients.matrix <- t(post.mn.patients.matrix)
+patient_matrix.l <- t(patient_matrix.l)
 
-saveRDS(df.lst, file="sel_hamming_v2")
-saveRDS(post.mn.patients, file="filt_genes_per_patient_v2")
 
+#Mapping gene IDs
+
+geneSymbols <- mapIds(org.Hs.eg.db, keys=rownames(t(patient_matrix.l)), keytype="SYMBOL", column="ENTREZID", multiVals="first")
+head(geneSymbols)
+inds <- which(!is.na(geneSymbols))
+found_genes <- geneSymbols[inds]
+
+g.lst.eid.l <- lapply(g.lst.l, function(x) found_genes[x])
+saveRDS(g.lst.eid.l, file="../multilayer/genes_per_patientl2")
+
+union.lst <- list(seq(1,36))
+
+for (j in 1:36) {
+  union.lst[[j]] <- union(names(g.lst.eid.l[[j]]), names(g.lst.eid.v[[j]]))
+}
+
+names(union.lst) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
+                      "VM048", "VM053", "VM054", "VM055", "VM056", "VM060", "VM064",  
+                      "VM066", "VM068", "VM071", "VM072", "VM073", "VM081", "VM082",   
+                      "VM083", "VM085", "VM089", "VM090", "VM092", "VM093", "VM099",   
+                      "VM103", "VM108", "VM110", "VM111", "VM113", "VM119", "VM124",   
+                      "VM125", "VM127")
+
+pct.v <- c()
+pct.l <- c()
+
+for (e in 1:length(names(union.lst))) {
+  pct.v[e] <- length(names(g.lst.eid.v[[e]]))/length(union.lst[[e]])
+  pct.l[e] <- length(names(g.lst.eid.l[[e]]))/length(union.lst[[e]])
+}
+
+names(pct.v) <- names(union.lst)
+names(pct.l) <- names(union.lst)
+
+df <- meta
+df$pct.v <- pct.v
+df$pct.l <- pct.l
+
+df$conditions <- as.factor(df$conditions)
+df$conditions_new <- as.numeric(df$conditions)
+
+palette(brewer.pal(n = 11, name = "Paired"))
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$conditions_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+abline(h=0.5)
+abline(v=0.7)
+legend("bottomleft",legend=unique(df$conditions),cex=0.7,fill=unique(df$conditions_new),bty = "n",y.intersp=0.6)
+
+df$mutations <- as.factor(df$mutations)
+df$mutations_new <- as.numeric(df$mutations)
+
+palette(brewer.pal(n = 4, name = "Set2"))
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$mutations_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+abline(h=0.5)
+abline(v=0.7)
+legend("bottomleft",legend=unique(df$mutations),cex=0.7,fill=unique(df$mutations_new),bty = "n",y.intersp=0.6)
+
+df$variant <- as.factor(df$variants)
+df$variant_new <- as.numeric(df$variant)
+
+palette(brewer.pal(n = 11, name = "Paired"))
+plot(df$pct.l, df$pct.v, type="p",pch=19,axes=T,xlab="percentage lymphatic",ylab="percentage venous", col=df$variant_new)
+text(df$pct.l, df$pct.v, rownames(df),xpd=T, pos=2,cex=0.7, offset=0.5)
+abline(h=0.5)
+abline(v=0.7)
+legend("bottomleft",legend=unique(df$variant),cex=0.7,fill=unique(df$variant_new),bty = "n",y.intersp=0.6)
+
+
+
+#######################################multi###################################
+
+ham_dist <- read.csv("../multilayer/hamming_2022.csv",row.names = 1)
+ham_dist 
+colnames(ham_dist) <- rownames(ham_dist)
+
+v.genes <- unique(unlist(g.lst.eid.v))
+l.genes <- unique(unlist(g.lst.eid.l))
+
+
+sel.ham.v <- ham_dist[v.genes,]
+sel.ham.l <- ham_dist[l.genes,]
+
+saveRDS(sel.ham.v,file="sel_ham_v")
+saveRDS(sel.ham.l,file="sel_ham_l")
 
 

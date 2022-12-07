@@ -21,16 +21,15 @@ jaccard_ind <- function(x){
 }
 
 
-setwd('/home/bscuser/Vascular_Disease/MG-04_Illumina_totalRNASeq/multilayer')
+setwd('~/Desktop/Vascular_Disease/vascular-disease/MG-04_Illumina_totalRNASeq/multilayer')
 # Load dependencies
-library(sigclust2)
+#library(sigclust2)
 library(pvclust)
 library(fpc)
 library(jaccard)
 library(CmmD)
 library(readr)
 library(knitr)
-library(data.table)
 library(ggplot2)
 library(ggrepel)
 library(data.table)
@@ -40,10 +39,16 @@ library(ggvenn)
 library(RColorBrewer)
 library(SummarizedExperiment)
 
-sel.ham.v <- readRDS("../feature_selection/sel_hamming_v2") #table generated in clustering.R, maybe change this to go from pre multi 
-sel.ham.l <- readRDS("../feature_selection/sel_hamming_l2") #table generated in clustering.R 
-hamming_com <- read.csv("multilayer/hamming_2022.csv")
+sel.v <- readRDS("../feature_selection/genes_per_patientv2") #table generated in clustering.R, maybe change this to go from pre multi 
+sel.l <- readRDS("../feature_selection/genes_per_patientl2") #table generated in clustering.R 
+hamming_com <- read.csv("hamming_2022.csv",header = TRUE, row.names = 1)
 colnames(hamming_com) <- rownames(hamming_com)
+
+#Selecting genes that are included in the multilayer network
+sel.v <- lapply(sel.v, function(x) x[x %in% rownames(hamming_com)])
+
+#Subset of multilayer network with selected genes
+sel.ham.v <- lapply(sel.v, function(x) hamming_com[x,x])
 
 # Load genes associated to each patient from factor selection
 tata.v <- lapply(sel.ham.v, function(x) rownames(x))
@@ -76,6 +81,12 @@ rownames(patient_matrix.v) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM
                                 "VM125", "VM127")
 
 # Load genes associated to each patient from factor selection
+#Selecting genes that are included in the multilayer network
+sel.l <- lapply(sel.l, function(x) x[x %in% rownames(hamming_com)])
+
+#Subset of multilayer network with selected genes
+sel.ham.l <- lapply(sel.l, function(x) hamming_com[x,x])
+
 tata.l <- lapply(sel.ham.l, function(x) rownames(x))
 splited_patients.l <- tata.l
 names(splited_patients.l) <- c("VM015", "VM024", "VM038", "VM040", "VM042", "VM043",   
@@ -169,7 +180,7 @@ for(k in 0:10){
       leng_matricin.v <- length(matricin.v[,j][matricin.v[,j]<=k]) ### k (in our case, a representation of theta) is maximum distance allowed in the clustering plot. (Sauron's eye)
       suc.v[j] <- leng_matricin.v
     }
-    suc.v <- suc.v[suc.v>1] ###Filetr genes that have no patient associated partners
+    suc.v <- suc.v[suc.v>1] ###Filter genes that have no patient associated partners
     genes_per_patient.v[[i]] <- suc.v - 1 ### As a value of 2 mean that only there is one more gene with the gene being analyzed, we substract 1.
   }
   names(genes_per_patient.v) <- names(splited_patients.v)
@@ -251,7 +262,6 @@ abline(v=0.62)
 legend("bottomleft",legend=unique(df$conditions),cex=0.7,fill=unique(df$conditions_new),bty = "n",y.intersp=0.6)
 
 
-#See how the patients separate based on mutation
 other.mut <- c("TEK",
                "PIK3CA",
                "PTEN",
